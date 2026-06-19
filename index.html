@@ -1,0 +1,2898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EASY GESTION - Asistente de Mensajes</title>
+<style>
+  :root {
+    --green: #54bfda;
+    --green-light: #e8f7fb;
+    --green-mid: #3dafc9;
+    --green-dark: #2a8fa8;
+    --accent: #25d366;
+    --blue: #2563eb;
+    --blue-light: #eef2ff;
+    --amber: #b45309;
+    --amber-light: #fef3e2;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* LAYOUT */
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--green-dark);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-logo span {
+    display: block;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    margin-top: 4px;
+    letter-spacing: .3px;
+  }
+  .sidebar-nav { padding: 12px 8px; flex: 1; }
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: rgba(255,255,255,0.4);
+    padding: 8px 8px 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+    transition: background .15s, color .15s;
+    user-select: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 500; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* MAIN AREA */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  .topbar-sub { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+  .topbar-badge {
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  .content.nopad { padding: 0; overflow: hidden; }
+
+  /* PAGES */
+  .page { display: none; height: 100%; }
+  .page.active { display: block; }
+
+  /* FLUJO PAGE */
+  .flow-container { max-width: 640px; margin: 0 auto; }
+
+  .flow-picker { max-width: 760px; margin: 0 auto; }
+  .flow-picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media (max-width: 700px) { .flow-picker-grid { grid-template-columns: 1fr; } }
+  .flow-picker-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    cursor: pointer;
+    transition: border-color .12s, box-shadow .12s;
+    text-align: left;
+  }
+  .flow-picker-card:hover { border-color: var(--green); box-shadow: var(--shadow); }
+  .flow-picker-icon { font-size: 26px; margin-bottom: 10px; }
+  .flow-picker-title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .flow-picker-desc { font-size: 13px; color: var(--gray-500); line-height: 1.5; margin-bottom: 10px; }
+  .flow-picker-count { font-size: 11px; color: var(--green-dark); background: var(--green-light); display: inline-block; padding: 2px 10px; border-radius: 99px; font-weight: 600; }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    min-height: 24px;
+  }
+  .bc-step {
+    font-size: 11px;
+    color: var(--gray-500);
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    padding: 2px 10px;
+    border-radius: 99px;
+  }
+  .bc-sep { font-size: 12px; color: var(--gray-300); }
+  .bc-home {
+    font-size: 12px;
+    color: var(--green-dark);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 2px 4px;
+  }
+
+  .q-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .q-step-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--green);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .q-edit-btn {
+    font-size: 11px;
+    color: var(--gray-400);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    padding: 3px 9px;
+    border-radius: 99px;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+  .q-edit-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .q-text {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    text-align: left;
+    padding: 12px 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    background: var(--white);
+    color: var(--gray-700);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: border-color .12s, background .12s, color .12s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .opt-btn:hover {
+    border-color: var(--green);
+    background: var(--green-light);
+    color: var(--green-dark);
+  }
+  .opt-icon { font-size: 18px; flex-shrink: 0; }
+  .opt-btn-add {
+    border-style: dashed;
+    color: var(--gray-400);
+    justify-content: center;
+  }
+  .opt-btn-add:hover { color: var(--green-dark); }
+
+  /* RESULT */
+  .result-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .result-header {
+    padding: 14px 20px;
+    background: var(--green-light);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .result-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .result-header-right { display: flex; align-items: center; gap: 8px; }
+  .result-count { font-size: 12px; color: var(--gray-400); }
+  .result-body { padding: 16px 20px; }
+
+  .variant {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color .15s;
+  }
+  .variant:last-child { margin-bottom: 0; }
+  .variant:hover { border-color: var(--green-mid); }
+  .variant-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .variant-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .variant-actions { display: flex; gap: 4px; }
+  .variant-mini-btn {
+    width: 24px; height: 24px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    background: var(--white);
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--gray-400);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .variant-mini-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .variant-text {
+    font-size: 14px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .variant-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+  .copy-btn {
+    font-size: 12px;
+    padding: 5px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all .12s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: #1a7a4a; background: var(--green-light); }
+  .copy-btn.ok { border-color: var(--accent); color: #1a7a4a; background: var(--green-light); }
+
+  .add-msg-btn {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px dashed var(--gray-200);
+    border-radius: var(--radius);
+    background: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .add-msg-btn:hover { border-color: var(--green); color: var(--green-dark); }
+
+  /* NEXT STEPS */
+  .next-section { margin-top: 8px; }
+  .next-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--gray-400);
+    margin-bottom: 10px;
+  }
+  .next-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .next-btn {
+    font-size: 13px;
+    padding: 7px 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .next-btn:hover { border-color: var(--green); color: var(--green-dark); background: var(--green-light); }
+  .next-btn-add {
+    border-style: dashed;
+    color: var(--gray-400);
+  }
+
+  .restart-btn {
+    font-size: 13px;
+    padding: 7px 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .12s;
+  }
+  .restart-btn:hover { background: var(--gray-100); }
+
+  .flow-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+  .flow-topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .flow-topbar-right { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .hidden { display: none !important; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* IA PAGE */
+  .ia-container { max-width: 720px; margin: 0 auto; }
+  .ia-intro {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .ia-intro-icon { font-size: 28px; flex-shrink: 0; }
+  .ia-intro-title { font-size: 15px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
+  .ia-intro-sub { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
+  .ia-form {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .ia-form label { font-size: 13px; font-weight: 600; color: var(--gray-700); display: block; margin-bottom: 8px; }
+  .ia-form select, .ia-form textarea {
+    width: 100%;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--gray-700);
+    background: var(--gray-50);
+    outline: none;
+    transition: border-color .12s;
+    font-family: inherit;
+  }
+  .ia-form select:focus, .ia-form textarea:focus { border-color: var(--green); background: var(--white); }
+  .ia-form textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+  .ia-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .ia-form .field { margin-bottom: 16px; }
+  .ia-submit {
+    width: 100%;
+    padding: 12px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .15s;
+  }
+  .ia-submit:hover { background: var(--green-mid); }
+  .ia-submit:disabled { background: var(--gray-300); cursor: not-allowed; }
+  .ia-result {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+  }
+  .ia-result-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ia-result-msgs { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .ia-msg-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .ia-msg-card-label { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .ia-msg-card-text { font-size: 14px; color: var(--gray-700); line-height: 1.7; }
+  .ia-msg-card-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+  /* PLANTILLAS PAGE */
+  .tmpl-container { max-width: 800px; margin: 0 auto; }
+  .tmpl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tmpl-search {
+    flex: 1;
+    min-width: 200px;
+    padding: 9px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 14px;
+    background: var(--white);
+    outline: none;
+    color: var(--gray-700);
+  }
+  .tmpl-search:focus { border-color: var(--green); }
+  .tmpl-filter {
+    padding: 9px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--white);
+    color: var(--gray-700);
+    outline: none;
+    cursor: pointer;
+  }
+  .add-tmpl-btn {
+    padding: 9px 16px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .add-tmpl-btn:hover { background: var(--green-mid); }
+  .tmpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .tmpl-grid { grid-template-columns: 1fr; } }
+  .tmpl-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tmpl-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .tmpl-card-meta { flex: 1; }
+  .tmpl-card-cat {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--green);
+    background: var(--green-light);
+    padding: 2px 8px;
+    border-radius: 99px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+  .tmpl-card-title { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+  .tmpl-card-text { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+  .tmpl-card-actions { display: flex; gap: 6px; }
+  .tmpl-icon-btn {
+    width: 30px; height: 30px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    background: var(--white);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: var(--gray-400);
+    transition: all .12s;
+    flex-shrink: 0;
+  }
+  .tmpl-icon-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--gray-900); }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { font-size: 12px; font-weight: 600; color: var(--gray-500); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+  .modal-field input, .modal-field select, .modal-field textarea {
+    width: 100%;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 14px;
+    color: var(--gray-700);
+    outline: none;
+    font-family: inherit;
+    background: var(--gray-50);
+    transition: border-color .12s;
+  }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--green); background: var(--white); }
+  .modal-field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .modal-hint { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+  .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+  .modal-actions-right { display: flex; gap: 10px; }
+  .btn-cancel {
+    padding: 9px 18px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    background: var(--white);
+    color: var(--gray-500);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-danger {
+    padding: 9px 18px;
+    border: 1px solid var(--red-light);
+    border-radius: var(--radius);
+    background: var(--red-light);
+    color: var(--red);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-danger:hover { background: #fde2e2; }
+  .btn-save {
+    padding: 9px 20px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-save:hover { background: var(--green-mid); }
+  .modal-radio-row { display: flex; gap: 10px; }
+  .modal-radio-opt {
+    flex: 1;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+  .modal-radio-opt.sel { border-color: var(--green); background: var(--green-light); color: var(--green-dark); font-weight: 600; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-400);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ───────────────── MAPA ARANA ───────────────── */
+  .page-arana { height: 100%; display: flex; flex-direction: column; }
+  .arana-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    flex-wrap: wrap;
+  }
+  .arana-toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .arana-flow-select {
+    padding: 7px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--white);
+    color: var(--gray-700);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .arana-btn {
+    font-size: 12px;
+    padding: 7px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .12s;
+  }
+  .arana-btn:hover { border-color: var(--green); color: var(--green-dark); background: var(--green-light); }
+  .arana-btn.primary { background: var(--green); color: var(--white); border-color: var(--green); }
+  .arana-btn.primary:hover { background: var(--green-mid); }
+  .arana-btn.active-mode { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+  .arana-hint { font-size: 11px; color: var(--gray-400); }
+
+  .arana-canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--gray-50);
+    background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px);
+    background-size: 22px 22px;
+    cursor: grab;
+  }
+  .arana-canvas-wrap.panning { cursor: grabbing; }
+  .arana-canvas-wrap.linking { cursor: crosshair; }
+  .arana-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+  }
+  .arana-svg-layer {
+    position: absolute;
+    top: 0; left: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .arana-edge-label {
+    font-size: 10px;
+    fill: var(--gray-500);
+    font-weight: 600;
+  }
+  .arana-edge-hit { pointer-events: stroke; cursor: pointer; }
+
+  .arana-node {
+    position: absolute;
+    width: 190px;
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .12s, box-shadow .12s;
+    z-index: 2;
+  }
+  .arana-node:hover { border-color: var(--green-mid); box-shadow: var(--shadow-md); }
+  .arana-node.selected { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-light), var(--shadow-md); }
+  .arana-node.link-source { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
+  .arana-node.is-result { border-left: 4px solid var(--green-mid); }
+  .arana-node.is-question { border-left: 4px solid var(--amber); }
+  .arana-node.is-start { border-left: 4px solid var(--blue); }
+  .arana-node-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--gray-400);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .arana-node-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    line-height: 1.35;
+    margin-bottom: 4px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+  .arana-node-meta { font-size: 11px; color: var(--gray-400); }
+  .arana-node-del {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--red);
+    color: var(--white);
+    border: 2px solid var(--white);
+    font-size: 11px;
+    line-height: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+  }
+  .arana-node:hover .arana-node-del { display: flex; }
+  .arana-node-port {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--green);
+    border: 2px solid var(--white);
+    right: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: crosshair;
+    z-index: 3;
+    box-shadow: var(--shadow);
+  }
+  .arana-node-port:hover { background: var(--green-dark); transform: translateY(-50%) scale(1.2); }
+
+  .arana-sidepanel {
+    position: absolute;
+    top: 0; right: 0;
+    height: 100%;
+    width: 360px;
+    max-width: 92vw;
+    background: var(--white);
+    border-left: 1px solid var(--gray-200);
+    box-shadow: -4px 0 16px rgba(0,0,0,0.08);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(0);
+    transition: transform .18s ease;
+  }
+  .arana-sidepanel.hidden-panel { transform: translateX(100%); }
+  .arana-sidepanel-head {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .arana-sidepanel-title { font-size: 14px; font-weight: 700; color: var(--gray-900); line-height: 1.4; }
+  .arana-sidepanel-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+  .arana-sidepanel-close {
+    border: none; background: var(--gray-100); width: 26px; height: 26px; border-radius: 50%;
+    cursor: pointer; font-size: 14px; color: var(--gray-500); flex-shrink: 0;
+  }
+  .arana-sidepanel-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+  .arana-sidepanel-foot { padding: 14px 18px; border-top: 1px solid var(--gray-200); display: flex; gap: 8px; }
+  .arana-conn-item {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--gray-600);
+    padding: 8px 10px; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 6px;
+  }
+  .arana-conn-del { border: none; background: none; color: var(--gray-400); cursor: pointer; font-size: 13px; }
+  .arana-conn-del:hover { color: var(--red); }
+
+  .arana-minimap-hint {
+    position: absolute;
+    bottom: 14px; left: 14px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--gray-500);
+    box-shadow: var(--shadow);
+    max-width: 260px;
+    z-index: 10;
+  }
+  .arana-zoom-controls {
+    position: absolute;
+    bottom: 14px; right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+  }
+  .arana-zoom-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    color: var(--gray-700);
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .arana-zoom-btn:hover { border-color: var(--green); }
+
+  /* ── MIS MENSAJES POR SITUACION ── */
+  .msj-page { height:100%; display:flex; flex-direction:column; position:relative; }
+  .msj-toolbar { display:flex; align-items:center; gap:8px; padding:12px 24px; background:var(--white); border-bottom:1px solid var(--gray-200); flex-shrink:0; flex-wrap:wrap; }
+  .msj-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border:1px solid var(--gray-200); border-radius:var(--radius); background:var(--white); color:var(--gray-700); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .12s; white-space:nowrap; }
+  .msj-btn:hover { border-color:var(--green); color:var(--green-dark); background:var(--green-light); }
+  .msj-btn.primary { background:var(--green); color:#fff; border-color:var(--green); }
+  .msj-btn.primary:hover { background:var(--green-mid); }
+  .msj-btn.active { background:var(--green-light); border-color:var(--green); color:var(--green-dark); }
+  .msj-btn.danger { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+  .msj-btn.danger:hover { background:#dc2626; color:#fff; }
+  .msj-hint { font-size:11px; color:var(--gray-400); margin-left:auto; }
+  .msj-canvas-wrap { flex:1; position:relative; overflow:hidden; background:var(--gray-50); cursor:grab; }
+  .msj-canvas-wrap.grabbing { cursor:grabbing; }
+  .msj-canvas-wrap.connecting { cursor:crosshair; }
+  .msj-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .msj-svg .edge-line { stroke:#c5e8f0; stroke-width:2; fill:none; marker-end:url(#arrowhead); }
+  .msj-svg .edge-line.preview { stroke:#54bfda; stroke-dasharray:6 4; }
+  .msj-canvas { position:absolute; inset:0; }
+  /* Tarjetas */
+  .msj-card {
+    position:absolute; width:180px;
+    background:var(--white); border:2px solid var(--gray-200);
+    border-radius:16px; box-shadow:var(--shadow);
+    cursor:pointer; user-select:none; transition:border-color .15s, box-shadow .15s;
+    display:flex; flex-direction:column;
+  }
+  .msj-card:hover { border-color:var(--green); box-shadow:var(--shadow-md); }
+  .msj-card.selected { border-color:var(--green); box-shadow:0 0 0 3px var(--green-light), var(--shadow-md); }
+  .msj-card.connect-source { border-color:#f59e0b; box-shadow:0 0 0 3px #fef3c7; }
+  .msj-card-header { padding:12px 14px 8px; display:flex; align-items:center; gap:8px; }
+  .msj-card-emoji { font-size:22px; flex-shrink:0; }
+  .msj-card-label { font-size:12px; font-weight:700; color:var(--gray-900); line-height:1.3; }
+  .msj-card-footer { padding:6px 14px 10px; display:flex; align-items:center; justify-content:space-between; }
+  .msj-card-count { font-size:11px; color:var(--gray-400); }
+  .msj-card-dot {
+    width:14px; height:14px; border-radius:50%;
+    background:var(--green); border:2px solid #fff;
+    box-shadow:0 0 0 1px var(--green);
+    cursor:crosshair; flex-shrink:0;
+  }
+  /* Panel lateral */
+  .msj-panel {
+    position:absolute; right:0; top:0; bottom:0; width:320px;
+    background:var(--white); border-left:1px solid var(--gray-200);
+    box-shadow:-4px 0 16px rgba(0,0,0,0.08);
+    display:flex; flex-direction:column; z-index:10;
+  }
+  .msj-panel.hidden { display:none; }
+  .msj-panel-header { padding:16px 20px; border-bottom:1px solid var(--gray-200); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .msj-panel-title { font-size:14px; font-weight:700; color:var(--gray-900); }
+  .msj-panel-close { background:none; border:none; cursor:pointer; color:var(--gray-400); font-size:20px; line-height:1; padding:0; }
+  .msj-panel-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
+  .msj-panel-footer { padding:12px 20px; border-top:1px solid var(--gray-200); flex-shrink:0; }
+  .msj-msg-card { background:var(--gray-50); border-radius:10px; padding:12px 14px; position:relative; }
+  .msj-msg-label { font-size:10px; font-weight:700; color:var(--green-dark); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+  .msj-msg-text { font-size:13px; color:var(--gray-700); line-height:1.6; white-space:pre-wrap; padding-right:28px; }
+  .msj-copy-btn { position:absolute; top:10px; right:10px; background:none; border:1px solid var(--gray-200); border-radius:6px; cursor:pointer; font-size:13px; padding:3px 6px; color:var(--gray-400); transition:all .12s; }
+  .msj-copy-btn:hover { border-color:var(--green); color:var(--green-dark); background:var(--green-light); }
+  .msj-copy-btn.ok { border-color:var(--green); color:var(--green-dark); background:var(--green-light); }
+  .msj-empty { font-size:13px; color:var(--gray-400); text-align:center; padding:20px 0; }
+  /* Modal */
+  .msj-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:200; padding:20px; }
+  .msj-modal-overlay.hidden { display:none; }
+  .msj-modal { background:var(--white); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:500px; box-shadow:var(--shadow-md); max-height:90vh; overflow-y:auto; }
+  .msj-modal h3 { font-size:15px; font-weight:700; margin-bottom:16px; color:var(--gray-900); }
+  .msj-modal-field { margin-bottom:14px; }
+  .msj-modal-field label { font-size:11px; font-weight:600; color:var(--gray-500); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+  .msj-modal-field input, .msj-modal-field textarea { width:100%; border:1px solid var(--gray-200); border-radius:var(--radius); padding:9px 12px; font-size:14px; color:var(--gray-700); outline:none; font-family:inherit; background:var(--gray-50); transition:border-color .12s; }
+  .msj-modal-field input:focus, .msj-modal-field textarea:focus { border-color:var(--green); background:var(--white); }
+  .msj-msg-row { display:flex; gap:6px; align-items:flex-start; margin-bottom:8px; }
+  .msj-msg-row textarea { flex:1; resize:vertical; min-height:60px; line-height:1.5; }
+  .msj-remove-btn { background:none; border:1px solid var(--gray-200); border-radius:6px; width:32px; height:36px; cursor:pointer; color:var(--gray-400); font-size:16px; flex-shrink:0; transition:all .12s; }
+  .msj-remove-btn:hover { border-color:#dc2626; color:#dc2626; background:#fef2f2; }
+  .msj-add-msg-btn { width:100%; padding:8px; border:1px dashed var(--gray-300); border-radius:var(--radius); background:none; color:var(--gray-500); cursor:pointer; font-family:inherit; font-size:13px; transition:all .12s; }
+  .msj-add-msg-btn:hover { border-color:var(--green); color:var(--green-dark); background:var(--green-light); }
+  .msj-modal-actions { display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px;">EASY GESTION</div>
+      <span>Asistente de Mensajes</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Principal</div>
+      <button class="nav-item active" onclick="showPage('flujo', this)">
+        <span class="icon">💬</span> Flujo de conversacion
+      </button>
+      <button class="nav-item" onclick="showPage('arana', this)">
+        <span class="icon">💬</span> Mis mensajes
+      </button>
+      <button class="nav-item" onclick="showPage('ia', this)">
+        <span class="icon">🤖</span> Sugerencia con IA
+      </button>
+      <button class="nav-item" onclick="showPage('plantillas', this)">
+        <span class="icon">📋</span> Mis plantillas
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Flujo de conversacion</div>
+        <div class="topbar-sub" id="topbar-sub">Elegi el flujo y segui los pasos para obtener el mensaje exacto</div>
+      </div>
+      <span class="topbar-badge">WhatsApp Ready</span>
+    </div>
+
+    <div class="content" id="content-wrap">
+
+      <!-- PAGE: FLUJO -->
+      <div class="page active" id="page-flujo">
+        <!-- Selector de flujo (cuando no hay uno activo) -->
+        <div class="flow-picker" id="flow-picker">
+          <div class="q-card" style="margin-bottom:20px;">
+            <div class="q-step-label">Elegi el flujo</div>
+            <div class="q-text">Que necesitas hacer ahora?</div>
+            <div class="flow-picker-grid" id="flow-picker-grid"></div>
+            <button class="add-msg-btn" onclick="openFlowModal()" style="margin-top:16px;">+ Crear flujo nuevo</button>
+          </div>
+        </div>
+
+        <!-- Flujo activo -->
+        <div class="flow-container hidden" id="flow-active-wrap">
+          <div class="flow-topbar">
+            <div class="flow-topbar-left">
+              <button class="bc-home" onclick="exitFlow()">⌂ Flujos</button>
+              <div class="breadcrumb" id="breadcrumb"></div>
+            </div>
+            <div class="flow-topbar-right">
+              <button class="restart-btn" onclick="restart()">↩ Reiniciar</button>
+            </div>
+          </div>
+          <div id="flow-main"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: IA -->
+      <div class="page" id="page-ia">
+        <div class="ia-container">
+          <div class="ia-intro">
+            <div class="ia-intro-icon">🤖</div>
+            <div>
+              <div class="ia-intro-title">Sugerencia inteligente con IA</div>
+              <div class="ia-intro-sub">Pega el historial de la conversacion con tu lead y la IA te sugiere el mejor mensaje para enviar ahora, personalizado para su rubro y situacion.</div>
+            </div>
+          </div>
+          <div class="ia-form">
+            <div class="row">
+              <div class="field">
+                <label>Rubro del lead</label>
+                <select id="ia-rubro"></select>
+              </div>
+              <div class="field">
+                <label>Situacion actual</label>
+                <select id="ia-situacion">
+                  <option value="primer_contacto">Primer contacto - nunca contesto</option>
+                  <option value="colgo">Se colgo / quedo en silencio</option>
+                  <option value="hablando">Estamos hablando</option>
+                  <option value="proponer_demo">Quiero proponer una demo</option>
+                  <option value="no_interesa">Dijo que no le interesa</option>
+                  <option value="tiene_sistema">Ya tiene un sistema</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Historial de la conversacion (opcional pero recomendado)</label>
+              <textarea id="ia-conv" placeholder="Pega aqui el chat de WhatsApp. Por ejemplo:
+
+Vos: Hola! Te escribimos de EASY GESTION...
+Lead: Hola, si me interesa
+Vos: A que rubro te dedicas?
+Lead: Tengo una ferreteria
+..."></textarea>
+            </div>
+            <button class="ia-submit" onclick="runIA()" id="ia-btn">
+              <span id="ia-btn-text">✨ Generar sugerencia</span>
+              <span class="spinner hidden" id="ia-spinner"></span>
+            </button>
+          </div>
+          <div class="ia-result hidden" id="ia-result">
+            <div class="ia-result-header">✅ Sugerencia de la IA</div>
+            <div id="ia-result-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: PLANTILLAS -->
+      <div class="page" id="page-plantillas">
+        <div class="tmpl-container">
+          <div class="tmpl-toolbar">
+            <input class="tmpl-search" type="text" placeholder="Buscar plantilla..." oninput="filterPlantillas(this.value)" id="tmpl-search">
+            <select class="tmpl-filter" onchange="filterPlantillas(document.getElementById('tmpl-search').value)" id="tmpl-cat-filter">
+              <option value="">Todas las categorias</option>
+              <option>Contacto inicial</option>
+              <option>Seguimiento</option>
+              <option>Por rubro</option>
+              <option>Demo / Reunion</option>
+              <option>Cierre</option>
+              <option>Custom</option>
+            </select>
+            <button class="add-tmpl-btn" onclick="openModal()">+ Nueva plantilla</button>
+          </div>
+          <div class="tmpl-grid" id="tmpl-grid"></div>
+        </div>
+      </div>
+
+      </div>
+
+      <!-- PAGE: ARANA (mapa visual) -->
+      <div class="page" id="page-arana" style="height:100%;">
+        <div class="msj-page">
+          <!-- TOOLBAR -->
+          <div class="msj-toolbar">
+            <button class="msj-btn primary" onclick="msjAddCard()">＋ Nueva situacion</button>
+            <button class="msj-btn" id="msj-connect-btn" onclick="msjToggleConnect()">🔗 Conectar</button>
+            <button class="msj-btn" onclick="msjAutoLayout()">📐 Ordenar</button>
+            <button class="msj-btn" onclick="msjResetView()">🎯 Centrar</button>
+            <span class="msj-hint" id="msj-hint">Click en una tarjeta para ver sus mensajes · Doble click para editar · Arrastra para mover</span>
+          </div>
+          <!-- CANVAS -->
+          <div class="msj-canvas-wrap" id="msj-canvas-wrap">
+            <svg class="msj-svg" id="msj-svg"></svg>
+            <div class="msj-canvas" id="msj-canvas"></div>
+          </div>
+          <!-- PANEL LATERAL -->
+          <div class="msj-panel hidden" id="msj-panel">
+            <div class="msj-panel-header">
+              <span class="msj-panel-title" id="msj-panel-title">—</span>
+              <button class="msj-panel-close" onclick="msjClosePanel()">×</button>
+            </div>
+            <div class="msj-panel-body" id="msj-panel-body"></div>
+            <div class="msj-panel-footer">
+              <button class="msj-btn primary" style="width:100%;justify-content:center" onclick="msjEditSelected()">✏️ Editar esta situacion</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL EDITAR SITUACION -->
+      <div class="msj-modal-overlay hidden" id="msj-modal-overlay" onclick="msjCloseModalOutside(event)">
+        <div class="msj-modal">
+          <h3 id="msj-modal-title">Nueva situacion</h3>
+          <div class="msj-modal-field">
+            <label>Nombre de la situacion</label>
+            <input type="text" id="msj-modal-name" placeholder="Ej: No contesto el ultimo mensaje">
+          </div>
+          <div class="msj-modal-field">
+            <label>Emoji</label>
+            <input type="text" id="msj-modal-emoji" placeholder="Ej: 😴" style="max-width:100px">
+          </div>
+          <div class="msj-modal-field">
+            <label>Mensajes para esta situacion</label>
+            <div id="msj-modal-msgs"></div>
+            <button class="msj-add-msg-btn" onclick="msjAddMsgField()">+ Agregar mensaje</button>
+          </div>
+          <div class="msj-modal-actions">
+            <button class="msj-btn danger" id="msj-modal-delete" onclick="msjDeleteCard()">🗑️ Eliminar</button>
+            <div style="display:flex;gap:8px">
+              <button class="msj-btn" onclick="msjCloseModal()">Cancelar</button>
+              <button class="msj-btn primary" onclick="msjSaveModal()">Guardar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: plantilla -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Nueva plantilla</div>
+    <div class="modal-field">
+      <label>Nombre de la plantilla</label>
+      <input type="text" id="modal-name" placeholder="Ej: Seguimiento ferreteria dia 3">
+    </div>
+    <div class="modal-field">
+      <label>Categoria</label>
+      <select id="modal-cat">
+        <option>Contacto inicial</option>
+        <option>Seguimiento</option>
+        <option>Por rubro</option>
+        <option>Demo / Reunion</option>
+        <option>Cierre</option>
+        <option>Custom</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Rubro (opcional)</label>
+      <input type="text" id="modal-rubro" placeholder="Ej: Ferreteria">
+    </div>
+    <div class="modal-field">
+      <label>Texto del mensaje</label>
+      <textarea id="modal-text" placeholder="Escribi el mensaje aca..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveTemplate()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: editar paso del flujo -->
+<div class="modal-overlay hidden" id="step-modal-overlay" onclick="closeStepModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="step-modal-title">Editar paso</div>
+
+    <div class="modal-field">
+      <label>Tipo de paso</label>
+      <div class="modal-radio-row">
+        <div class="modal-radio-opt" id="step-type-question" onclick="setStepType('question')">❓ Pregunta<br>(con opciones)</div>
+        <div class="modal-radio-opt" id="step-type-result" onclick="setStepType('result')">💬 Mensajes<br>(resultado final)</div>
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label>Titulo del paso</label>
+      <input type="text" id="step-modal-name" placeholder="Ej: Pregunta por horario disponible">
+    </div>
+
+    <div id="step-question-fields">
+      <div class="modal-field">
+        <label>Texto de la pregunta</label>
+        <textarea id="step-modal-question" placeholder="Ej: Que dia le viene mejor para la reunion?" style="min-height:60px;"></textarea>
+      </div>
+      <div class="modal-hint">Las opciones de respuesta se agregan despues de crear el paso, desde el mapa visual o desde el flujo.</div>
+    </div>
+
+    <div id="step-result-fields">
+      <div class="modal-hint" style="margin-bottom:10px;">Los mensajes de este paso se agregan despues de crearlo, desde el flujo o el mapa visual.</div>
+    </div>
+
+    <div class="modal-actions">
+      <div>
+        <button class="btn-danger hidden" id="step-modal-delete" onclick="deleteCurrentStep()">Eliminar paso</button>
+      </div>
+      <div class="modal-actions-right">
+        <button class="btn-cancel" onclick="closeStepModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveStepModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: editar mensaje -->
+<div class="modal-overlay hidden" id="msg-modal-overlay" onclick="closeMsgModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="msg-modal-title">Editar mensaje</div>
+    <div class="modal-field">
+      <label>Etiqueta / variante</label>
+      <input type="text" id="msg-modal-label" placeholder="Ej: Opcion A - Directa">
+    </div>
+    <div class="modal-field">
+      <label>Texto del mensaje</label>
+      <textarea id="msg-modal-text" placeholder="Escribi el mensaje aca..." style="min-height:120px;"></textarea>
+    </div>
+    <div class="modal-actions">
+      <div>
+        <button class="btn-danger hidden" id="msg-modal-delete" onclick="deleteCurrentMsg()">Eliminar</button>
+      </div>
+      <div class="modal-actions-right">
+        <button class="btn-cancel" onclick="closeMsgModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveMsgModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: nueva opcion / conexion -->
+<div class="modal-overlay hidden" id="opt-modal-overlay" onclick="closeOptModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="opt-modal-title">Nueva opcion</div>
+    <div class="modal-field">
+      <label>Texto del boton</label>
+      <input type="text" id="opt-modal-label" placeholder="Ej: Acepto la propuesta de horario">
+    </div>
+    <div class="modal-field">
+      <label>Icono (emoji, opcional)</label>
+      <input type="text" id="opt-modal-icon" placeholder="Ej: ✅" maxlength="4">
+    </div>
+    <div class="modal-field">
+      <label>Lleva a que paso?</label>
+      <select id="opt-modal-target"></select>
+      <div class="modal-hint">Si no existe el paso todavia, elegi "Crear paso nuevo".</div>
+    </div>
+    <div class="modal-field hidden" id="opt-modal-newname-wrap">
+      <label>Nombre del paso nuevo</label>
+      <input type="text" id="opt-modal-newname" placeholder="Ej: Confirmar horario de reunion">
+    </div>
+    <div class="modal-actions">
+      <div>
+        <button class="btn-danger hidden" id="opt-modal-delete" onclick="deleteCurrentOpt()">Eliminar conexion</button>
+      </div>
+      <div class="modal-actions-right">
+        <button class="btn-cancel" onclick="closeOptModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveOptModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: nuevo flujo -->
+<div class="modal-overlay hidden" id="flow-modal-overlay" onclick="closeFlowModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">Crear flujo nuevo</div>
+    <div class="modal-field">
+      <label>Nombre del flujo</label>
+      <input type="text" id="flow-modal-name" placeholder="Ej: Reclamos y soporte">
+    </div>
+    <div class="modal-field">
+      <label>Descripcion corta</label>
+      <input type="text" id="flow-modal-desc" placeholder="Ej: Para cuando un cliente activo tiene un problema">
+    </div>
+    <div class="modal-field">
+      <label>Icono (emoji)</label>
+      <input type="text" id="flow-modal-icon" placeholder="Ej: 🛠️" maxlength="4">
+    </div>
+    <div class="modal-actions">
+      <div></div>
+      <div class="modal-actions-right">
+        <button class="btn-cancel" onclick="closeFlowModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveFlowModal()">Crear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATOS INICIALES
+// ═══════════════════════════════════════════════════════
+
+const DEFAULT_FLOWS = {
+  ventas: {
+    id: 'ventas',
+    name: 'Flujo de ventas',
+    icon: '💼',
+    desc: 'Consulta inicial, presentacion, demo y cierre para nuevos leads',
+    startStep: 'situacion',
+    steps: {
+      situacion: {
+        id: 'situacion', type: 'question', name: 'Situacion del lead',
+        question: 'Cual es la situacion actual con este lead?',
+        options: [
+          { label: 'Nunca le hable / primer contacto', icon: '👋', target: 'rubro_inicial' },
+          { label: 'Le hable y no contesto', icon: '🔇', target: 'rubro_seguimiento' },
+          { label: 'Mostro interes, hay conversacion', icon: '💬', target: 'rubro_activo' },
+          { label: 'Quiero proponer una demo / reunion', icon: '📅', target: 'rubro_demo' },
+          { label: 'Dijo que no le interesa', icon: '❌', target: 'objecion' },
+          { label: 'Ya tiene otro sistema', icon: '💻', target: 'competencia' }
+        ],
+        x: 80, y: 200
+      },
+      rubro_inicial: {
+        id: 'rubro_inicial', type: 'question', name: 'Rubro (primer contacto)',
+        question: 'A que rubro pertenece el negocio?',
+        options: [
+          { label: 'Kiosco / minimercado', icon: '🏪', target: 'msg_inicial_kiosco' },
+          { label: 'Ferreteria / corralon', icon: '🔧', target: 'msg_inicial_ferreteria' },
+          { label: 'Veterinaria', icon: '🐾', target: 'msg_inicial_veterinaria' },
+          { label: 'Restaurante / bar / cafe', icon: '🍽️', target: 'msg_inicial_resto' },
+          { label: 'Salon de belleza / peluqueria', icon: '💇', target: 'msg_inicial_belleza' },
+          { label: 'Farmacia / perfumeria', icon: '💊', target: 'msg_inicial_farmacia' },
+          { label: 'Libreria / bazar', icon: '📚', target: 'msg_inicial_libreria' },
+          { label: 'Taller / mecanica', icon: '🔩', target: 'msg_inicial_taller' },
+          { label: 'Gym / club deportivo', icon: '🏋️', target: 'msg_inicial_gym' },
+          { label: 'Otro / no se', icon: '🏢', target: 'msg_inicial_generico' }
+        ],
+        x: 360, y: 80
+      },
+      rubro_seguimiento: {
+        id: 'rubro_seguimiento', type: 'question', name: 'Rubro (seguimiento)',
+        question: 'A que rubro pertenece el negocio?',
+        options: [
+          { label: 'Kiosco / minimercado', icon: '🏪', target: 'msg_seg_kiosco' },
+          { label: 'Ferreteria / corralon', icon: '🔧', target: 'msg_seg_ferreteria' },
+          { label: 'Veterinaria', icon: '🐾', target: 'msg_seg_veterinaria' },
+          { label: 'Restaurante / bar / cafe', icon: '🍽️', target: 'msg_seg_resto' },
+          { label: 'Otro / no se', icon: '🏢', target: 'msg_seg_generico' }
+        ],
+        x: 360, y: 260
+      },
+      rubro_activo: {
+        id: 'rubro_activo', type: 'question', name: 'Rubro (lead activo)',
+        question: 'A que rubro pertenece el negocio?',
+        options: [
+          { label: 'Kiosco / minimercado', icon: '🏪', target: 'msg_activo_kiosco' },
+          { label: 'Ferreteria / corralon', icon: '🔧', target: 'msg_activo_ferreteria' },
+          { label: 'Veterinaria', icon: '🐾', target: 'msg_activo_veterinaria' },
+          { label: 'Restaurante / bar / cafe', icon: '🍽️', target: 'msg_activo_resto' },
+          { label: 'Otro / no se', icon: '🏢', target: 'msg_activo_generico' }
+        ],
+        x: 360, y: 440
+      },
+      rubro_demo: {
+        id: 'rubro_demo', type: 'question', name: 'Rubro (proponer demo)',
+        question: 'A que rubro pertenece el negocio?',
+        options: [
+          { label: 'Kiosco / minimercado', icon: '🏪', target: 'msg_demo_kiosco' },
+          { label: 'Ferreteria / corralon', icon: '🔧', target: 'msg_demo_ferreteria' },
+          { label: 'Veterinaria', icon: '🐾', target: 'msg_demo_veterinaria' },
+          { label: 'Otro / no se', icon: '🏢', target: 'msg_demo_generico' }
+        ],
+        x: 360, y: 620
+      },
+      objecion: {
+        id: 'objecion', type: 'result', name: 'No le interesa (objecion)',
+        messages: [
+          { id: 'm1', label: 'Opcion A - Entender el motivo', text: 'Hola [nombre], entiendo perfectamente. Solo una pregunta rapida: por que no seria util para vos en este momento? A veces hay algo puntual que podemos resolver.\n\nSin compromiso, te lo pregunto para entenderte mejor 🙏' },
+          { id: 'm2', label: 'Opcion B - Dejar la puerta abierta', text: 'Hola [nombre], tranquilo/a! Lo anoto para mas adelante. Si en algun momento cambia la situacion o tenes alguna pregunta, aca estamos.\n\nQue tengas un buen dia! 😊' }
+        ],
+        nextSteps: [],
+        x: 360, y: 800
+      },
+      competencia: {
+        id: 'competencia', type: 'result', name: 'Ya tiene otro sistema',
+        messages: [
+          { id: 'm1', label: 'Opcion A - Mostrar diferencias', text: 'Ah que bueno! Y como lo estan usando? La mayoria de los negocios que arrancaron con otro sistema terminaron pasandose a EASY GESTION por la facilidad y el soporte personalizado.\n\nTe cuento la diferencia en 3 minutos? 🚀' },
+          { id: 'm2', label: 'Opcion B - Seguimiento a futuro', text: 'Entiendo! Si en algun momento quieren comparar o cambiar, no duden en escribirme.\n\nUn dato: el 80% de nuestros clientes vinieron de otro sistema. Por algo sera 😄' }
+        ],
+        nextSteps: [],
+        x: 360, y: 960
+      },
+      msg_inicial_kiosco: {
+        id: 'msg_inicial_kiosco', type: 'result', name: 'Kiosco - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A - Directa', text: 'Hola [nombre]! Te escribimos de EASY GESTION, el sistema de gestion mas usado en kioscos y minimercados de la zona.\n\nTe ayuda a controlar stock, caja, fiados y cierre del dia, todo desde el celular.\n\nTe mando mas info? 📱' },
+          { id: 'm2', label: 'Opcion B - Con pregunta', text: 'Hola [nombre]! Tenes kiosco o minimercado, verdad?\n\nTe pregunto porque tenemos un sistema que literalmente te borra el cuaderno de fiados, el Excel de stock y la calculadora al mismo tiempo 😄\n\nTe cuento como en 2 minutos?' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 80
+      },
+      msg_inicial_ferreteria: {
+        id: 'msg_inicial_ferreteria', type: 'result', name: 'Ferreteria - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A - Directa', text: 'Hola [nombre]! Soy de EASY GESTION, un sistema de gestion pensado para ferreterias y negocios de materiales.\n\nTe permite manejar presupuestos, clientes mayoristas, stock de productos con variantes y cierre de caja, todo en uno.\n\nTe interesa conocerlo? 🔧' },
+          { id: 'm2', label: 'Opcion B - Con gancho', text: 'Hola [nombre]! Me comentaron que tenes una ferreteria.\n\nTe pregunto directo: cuanto tiempo perdis por semana buscando productos en el deposito o controlando lo que te debe cada cliente?\n\nNuestro sistema resuelve exactamente eso. Te cuento? 🏗️' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 180
+      },
+      msg_inicial_veterinaria: {
+        id: 'msg_inicial_veterinaria', type: 'result', name: 'Veterinaria - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema disenado para veterinarias.\n\nTe permite llevar historia clinica de cada mascota, turnos, stock de medicamentos y caja, todo integrado.\n\nTe mando mas info? 🐾' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 280
+      },
+      msg_inicial_resto: {
+        id: 'msg_inicial_resto', type: 'result', name: 'Restaurante - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Soy de EASY GESTION, un sistema para restaurantes, bares y cafes.\n\nMesas, comandas, delivery, caja y stock, todo desde la tablet o el celular. Sin papeles.\n\nTe cuento mas? 🍽️' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 380
+      },
+      msg_inicial_belleza: {
+        id: 'msg_inicial_belleza', type: 'result', name: 'Belleza - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Te escribimos de EASY GESTION, el sistema que usan salones de belleza para manejar turnos, clientes frecuentes, stock de productos y caja.\n\nTe interesa conocerlo? 💇' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 480
+      },
+      msg_inicial_farmacia: {
+        id: 'msg_inicial_farmacia', type: 'result', name: 'Farmacia - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Soy de EASY GESTION, un sistema para farmacias y perfumerias.\n\nControl de stock con vencimientos, recetas, clientes y caja en un solo lugar.\n\nTe cuento? 💊' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 580
+      },
+      msg_inicial_libreria: {
+        id: 'msg_inicial_libreria', type: 'result', name: 'Libreria - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Te escribimos de EASY GESTION, ideal para librerias y bazares.\n\nStock organizado por categoria, ventas rapidas y cierre de caja diario.\n\nTe mando info? 📚' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 680
+      },
+      msg_inicial_taller: {
+        id: 'msg_inicial_taller', type: 'result', name: 'Taller - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Soy de EASY GESTION. Para talleres y mecanicas tenemos orden de trabajo, presupuestos, control de repuestos y seguimiento de cada vehiculo.\n\nTe interesa? 🔩' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 780
+      },
+      msg_inicial_gym: {
+        id: 'msg_inicial_gym', type: 'result', name: 'Gym - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A', text: 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para gimnasios y clubes.\n\nSocios, cuotas, rutinas, acceso y caja, todo integrado.\n\nTe cuento? 🏋️' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 880
+      },
+      msg_inicial_generico: {
+        id: 'msg_inicial_generico', type: 'result', name: 'Generico - Primer contacto',
+        messages: [
+          { id: 'm1', label: 'Opcion A - Directa', text: 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema de gestion para negocios.\n\nTe ayuda a controlar stock, caja, clientes y ventas, todo desde el celular.\n\nTe cuento como funciona? 📱' },
+          { id: 'm2', label: 'Opcion B - Con pregunta', text: 'Hola [nombre]! Que tipo de negocio tenes? Te pregunto porque EASY GESTION se adapta a cualquier rubro y lo vemos configurado especificamente para vos.\n\nTe parece si hablamos 5 minutos? 😊' }
+        ],
+        nextSteps: ['situacion'],
+        x: 700, y: 980
+      },
+      msg_seg_kiosco: {
+        id: 'msg_seg_kiosco', type: 'result', name: 'Kiosco - Seguimiento',
+        messages: [
+          { id: 'm1', label: 'Dia 2', text: 'Hola [nombre]! Te escribi ayer por el sistema para tu kiosco.\n\nSolo queria comentarte que esta semana tenemos una promo especial para negocios de la zona. Te cuento? 🏪' },
+          { id: 'm2', label: 'Dia 5', text: 'Hola [nombre]! Por las dudas que no hayas visto el mensajito anterior.\n\nSon 5 minutos para mostrarte como se usa. Muchos kiosqueros que hoy usan EASY GESTION arrancaron igual de desconfiados 😄\n\nTe parece si te mando el video de demo?' }
+        ],
+        nextSteps: ['rubro_activo', 'rubro_demo'],
+        x: 700, y: 260
+      },
+      msg_seg_ferreteria: {
+        id: 'msg_seg_ferreteria', type: 'result', name: 'Ferreteria - Seguimiento',
+        messages: [
+          { id: 'm1', label: 'Dia 2', text: 'Hola [nombre]! Te mande info ayer de EASY GESTION para tu ferreteria.\n\nTe mando el video de 3 minutos que muestra exactamente como funciona el stock de materiales?' },
+          { id: 'm2', label: 'Dia 5', text: 'Hola [nombre]! Un ultimo intento antes de no molestarte mas 😊\n\nTengo 10 minutos disponibles esta semana para mostrarte el sistema en vivo, gratis y sin compromiso.\n\nTe viene bien algun dia?' }
+        ],
+        nextSteps: ['rubro_activo', 'rubro_demo'],
+        x: 700, y: 360
+      },
+      msg_seg_veterinaria: {
+        id: 'msg_seg_veterinaria', type: 'result', name: 'Veterinaria - Seguimiento',
+        messages: [
+          { id: 'm1', label: 'Dia 2', text: 'Hola [nombre]! Te escribi ayer sobre el sistema para veterinarias.\n\nTe cuento que la instalacion la hacemos nosotros y tarda menos de 30 minutos. Vos no tenes que hacer nada tecnico. Te parece si coordinamos? 🐾' }
+        ],
+        nextSteps: ['rubro_activo', 'rubro_demo'],
+        x: 700, y: 460
+      },
+      msg_seg_resto: {
+        id: 'msg_seg_resto', type: 'result', name: 'Restaurante - Seguimiento',
+        messages: [
+          { id: 'm1', label: 'Dia 2', text: 'Hola [nombre]! Te escribi ayer sobre EASY GESTION para tu local.\n\nTe mando el acceso de prueba gratis por 7 dias para que lo veas sin compromiso? 🍽️' }
+        ],
+        nextSteps: ['rubro_activo', 'rubro_demo'],
+        x: 700, y: 560
+      },
+      msg_seg_generico: {
+        id: 'msg_seg_generico', type: 'result', name: 'Generico - Seguimiento',
+        messages: [
+          { id: 'm1', label: 'Dia 2', text: 'Hola [nombre]! Por si no viste el mensaje de ayer, te escribia de EASY GESTION.\n\nTe mando el acceso de prueba para que lo veas tranquilo/a?' },
+          { id: 'm2', label: 'Dia 5', text: 'Hola [nombre]! Ultima consulta, no te molesto mas despues de esto 😊\n\nHay algo que te frenara para conocer el sistema? Si es una cuestion de tiempo, precio o algo tecnico, lo charlamos.' }
+        ],
+        nextSteps: ['rubro_activo', 'rubro_demo'],
+        x: 700, y: 660
+      },
+      msg_activo_kiosco: {
+        id: 'msg_activo_kiosco', type: 'result', name: 'Kiosco - Lead activo',
+        messages: [
+          { id: 'm1', label: 'Explicar el sistema', text: 'Buenisimo! Te cuento como funciona EASY GESTION en un kiosco:\n\n✅ Stock en tiempo real: sabies lo que entra y lo que sale sin contar de a uno\n✅ Fiados digitales: quien te debe, cuanto y desde cuando\n✅ Cierre de caja diario automatico\n✅ Alertas cuando algo esta por agotarse\n✅ Se maneja desde el celular, la tablet o la computadora\n\nTe cuento el precio o preferis verlo en vivo primero? 📱' },
+          { id: 'm2', label: 'Responder dudas comunes', text: 'Claro! Te respondo lo que mas preguntan:\n\n❓ Es complicado de usar? No, en 30 minutos ya lo manejas solo.\n❓ Funciona sin internet? Si, tiene modo offline.\n❓ Que pasa si tengo un problema? Soporte directo por WhatsApp, el mismo dia.\n\nQue mas necesitas saber?' }
+        ],
+        nextSteps: ['rubro_demo'],
+        x: 700, y: 440
+      },
+      msg_activo_ferreteria: {
+        id: 'msg_activo_ferreteria', type: 'result', name: 'Ferreteria - Lead activo',
+        messages: [
+          { id: 'm1', label: 'Explicar el sistema', text: 'Perfecto! Te cuento lo que EASY GESTION hace por una ferreteria:\n\n✅ Stock por unidad, metro, kilo o bulto\n✅ Presupuestos rapidos que se mandan por WhatsApp\n✅ Control de cuentas corrientes de clientes mayoristas\n✅ Historial de ventas y movimientos\n✅ Varios vendedores desde distintos dispositivos\n\nTe interesa ver una demo en vivo? Solo 15 minutos 🔧' }
+        ],
+        nextSteps: ['rubro_demo'],
+        x: 700, y: 540
+      },
+      msg_activo_veterinaria: {
+        id: 'msg_activo_veterinaria', type: 'result', name: 'Veterinaria - Lead activo',
+        messages: [
+          { id: 'm1', label: 'Explicar el sistema', text: 'Te cuento todo lo que hace EASY GESTION para veterinarias:\n\n✅ Historia clinica digital de cada mascota, con fotos y evolucion\n✅ Recordatorios automaticos de vacunas y turnos\n✅ Stock de medicamentos y alimentos\n✅ Facturacion electronica integrada\n✅ Gestion de turnos online\n\nTe lo muestro la semana que viene? 🐾' }
+        ],
+        nextSteps: ['rubro_demo'],
+        x: 700, y: 640
+      },
+      msg_activo_resto: {
+        id: 'msg_activo_resto', type: 'result', name: 'Restaurante - Lead activo',
+        messages: [
+          { id: 'm1', label: 'Explicar el sistema', text: 'Bueno! Para restaurantes y bares EASY GESTION tiene:\n\n✅ Mesas y comandas en tiempo real desde la tablet del mozo\n✅ Cocina con pantalla de pedidos\n✅ Delivery y pedidos online integrados\n✅ Stock de insumos\n✅ Cierre de caja por turno\n\nTe muestro como queda configurado para tu local? 🍽️' }
+        ],
+        nextSteps: ['rubro_demo'],
+        x: 700, y: 740
+      },
+      msg_activo_generico: {
+        id: 'msg_activo_generico', type: 'result', name: 'Generico - Lead activo',
+        messages: [
+          { id: 'm1', label: 'Explicar el sistema', text: 'Te cuento de que va EASY GESTION:\n\n✅ Stock y ventas en tiempo real\n✅ Caja y cierre diario automatico\n✅ Clientes y fiados\n✅ Reportes de lo que mas y menos vendes\n✅ Desde el celular, tablet o PC\n\nQue es lo que mas te importa de un sistema de gestion? Asi te muestro lo mas relevante para vos 😊' }
+        ],
+        nextSteps: ['rubro_demo'],
+        x: 700, y: 840
+      },
+      msg_demo_kiosco: {
+        id: 'msg_demo_kiosco', type: 'result', name: 'Kiosco - Proponer demo',
+        messages: [
+          { id: 'm1', label: 'Coordinar reunion', text: 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu kiosco.\n\nSon 15-20 minutos por videollamada o en persona si estas cerca.\n\nQue dias tenes disponibles esta semana? 📅' },
+          { id: 'm2', label: 'Verificar antes de demo', text: 'Antes de la demo, una sola pregunta: tenes internet en el local? Puede ser wifi o datos del celular.\n\nCon eso es suficiente para que funcione todo. 📶' }
+        ],
+        nextSteps: ['verificar_specs', 'cierre'],
+        x: 700, y: 620
+      },
+      msg_demo_ferreteria: {
+        id: 'msg_demo_ferreteria', type: 'result', name: 'Ferreteria - Proponer demo',
+        messages: [
+          { id: 'm1', label: 'Coordinar reunion', text: 'Perfecto! Te hago una demo especifica para ferreterias, con los modulos de presupuestos y stock de materiales.\n\nQue dia te viene bien? Puede ser video o en el local. 🔧' }
+        ],
+        nextSteps: ['verificar_specs', 'cierre'],
+        x: 700, y: 720
+      },
+      msg_demo_veterinaria: {
+        id: 'msg_demo_veterinaria', type: 'result', name: 'Veterinaria - Proponer demo',
+        messages: [
+          { id: 'm1', label: 'Coordinar reunion', text: 'Genial! Te muestro la historia clinica, los turnos y el stock de medicamentos en vivo.\n\nCuanto tiempo tenes disponible? Con 20 minutos alcanza. 🐾' }
+        ],
+        nextSteps: ['verificar_specs', 'cierre'],
+        x: 700, y: 820
+      },
+      msg_demo_generico: {
+        id: 'msg_demo_generico', type: 'result', name: 'Generico - Proponer demo',
+        messages: [
+          { id: 'm1', label: 'Coordinar reunion', text: 'Buenisimo! Cuando podemos hacer la demo?\n\nSon 15-20 minutos por video o en persona. Yo me adapto a tu horario.\n\nQue dia te queda bien? 📅' }
+        ],
+        nextSteps: ['verificar_specs', 'cierre'],
+        x: 700, y: 920
+      },
+      verificar_specs: {
+        id: 'verificar_specs', type: 'result', name: 'Verificar specs tecnicas',
+        messages: [
+          { id: 'm1', label: 'Verificacion completa', text: 'Antes de arrancar, te hago 3 preguntas rapidas para dejarlo todo listo:\n\n1️⃣ Tenes internet en el local? (wifi o datos)\n2️⃣ Que dispositivo vas a usar principalmente? (celular, tablet, PC)\n3️⃣ Cuantos empleados van a usar el sistema?\n\nCon eso ya puedo preparar la instalacion para que sea express 🛠️' },
+          { id: 'm2', label: 'Solo pregunta de dispositivo', text: 'Rapido: desde que dispositivo lo vas a usar principalmente?\n\n📱 Celular\n💻 PC o notebook\n📟 Tablet\n\nAsi lo configuro para vos antes de la demo.' }
+        ],
+        nextSteps: ['cierre'],
+        x: 1050, y: 700
+      },
+      cierre: {
+        id: 'cierre', type: 'result', name: 'Cierre de venta',
+        messages: [
+          { id: 'm1', label: 'Cierre directo post-demo', text: 'Buenisimo! Y? Te convencio?\n\nSi arrancamos hoy mismo, te damos:\n✅ Instalacion incluida\n✅ 7 dias de prueba gratis\n✅ Soporte por WhatsApp el primer mes\n\nArrancamos? 🚀' },
+          { id: 'm2', label: 'Cierre con precio', text: 'El sistema tiene un costo de $[PRECIO] por mes, con todo incluido.\n\nSi arrancas esta semana te hacemos el primer mes a mitad de precio.\n\nTe parece? 💰' },
+          { id: 'm3', label: 'Seguimiento post-demo sin respuesta', text: 'Hola [nombre]! Como te quedo la demo?\n\nMe quedo con alguna pregunta o algo que no quedo claro? Estoy aca para lo que necesites 😊' }
+        ],
+        nextSteps: [],
+        x: 1050, y: 900
+      }
+    }
+  },
+
+  chatreal: {
+    id: 'chatreal',
+    name: 'Proceso de venta completo',
+    icon: '🎯',
+    desc: 'El flujo paso a paso real: desde la primera consulta hasta cerrar la venta',
+    startStep: 'c_consulta',
+    steps: {
+      c_consulta: {
+        id: 'c_consulta', type: 'question', name: 'Etapa del proceso',
+        question: 'En que etapa del proceso de venta estas?',
+        options: [
+          { label: 'Consulta inicial (primer mensaje)', icon: '👋', target: 'c_msg_consulta' },
+          { label: 'Explicar el sistema', icon: '📖', target: 'c_msg_explicar' },
+          { label: 'Coordinar la reunion / demo', icon: '📅', target: 'c_msg_coordinar' },
+          { label: 'Verificar specs tecnicas', icon: '🛠️', target: 'c_msg_specs' },
+          { label: 'Cerrar la venta', icon: '🤝', target: 'c_msg_cierre' }
+        ],
+        x: 80, y: 200
+      },
+      c_msg_consulta: {
+        id: 'c_msg_consulta', type: 'result', name: 'Consulta inicial',
+        messages: [
+          { id: 'm1', label: 'Apertura con pregunta', text: 'Hola [nombre]! Vi que consultaste por EASY GESTION 😊\n\nTe pregunto primero: que tipo de negocio tenes? Asi te muestro como quedaria configurado para vos especificamente.\n\nSon 2 minutos y ya te cuento todo 🚀' },
+          { id: 'm2', label: 'Apertura directa', text: 'Hola [nombre]! Gracias por escribirnos 🙌\n\nSoy [tu nombre] de EASY GESTION. Cuentame: que necesitas resolver en tu negocio? Stock, caja, clientes, fiados...?\n\nAsi veo si te puedo ayudar de verdad.' }
+        ],
+        nextSteps: ['c_msg_explicar'],
+        x: 380, y: 80
+      },
+      c_msg_explicar: {
+        id: 'c_msg_explicar', type: 'question', name: 'Explicar segun rubro',
+        question: 'Cual es el rubro del negocio para explicar bien el sistema?',
+        options: [
+          { label: 'Kiosco / minimercado', icon: '🏪', target: 'c_explain_kiosco' },
+          { label: 'Ferreteria / materiales', icon: '🔧', target: 'c_explain_ferreteria' },
+          { label: 'Veterinaria', icon: '🐾', target: 'c_explain_vet' },
+          { label: 'Gastronomia', icon: '🍽️', target: 'c_explain_gastro' },
+          { label: 'Generico', icon: '🏢', target: 'c_explain_generico' }
+        ],
+        x: 380, y: 260
+      },
+      c_explain_kiosco: {
+        id: 'c_explain_kiosco', type: 'result', name: 'Explicacion - Kiosco',
+        messages: [
+          { id: 'm1', label: 'Presentacion completa', text: 'Te cuento que hace EASY GESTION en un kiosco:\n\n🏪 STOCK: escaneas el codigo de barras y ya queda registrado. Cuando algo se acaba, te avisa.\n💰 CAJA: cada venta queda guardada, el cierre del dia es automatico.\n📋 FIADOS: nada mas de cuadernito. Los fiados son digitales, con nombre, monto y fecha.\n📱 TODO DESDE EL CELULAR: no necesitas PC ni nada especial.\n\nLo mejor? En 30 minutos ya lo estas usando. Te lo muestro en vivo?' }
+        ],
+        nextSteps: ['c_msg_coordinar'],
+        x: 700, y: 260
+      },
+      c_explain_ferreteria: {
+        id: 'c_explain_ferreteria', type: 'result', name: 'Explicacion - Ferreteria',
+        messages: [
+          { id: 'm1', label: 'Presentacion completa', text: 'Para una ferreteria, EASY GESTION te resuelve:\n\n🔧 STOCK por unidad, metro, kilo o bulto sin problema\n📄 PRESUPUESTOS rapidos que se mandan por WhatsApp en el momento\n👥 CLIENTES MAYORISTAS con cuenta corriente y limite de credito\n💰 CAJA y movimientos del dia\n👨‍💼 Varios vendedores trabajando al mismo tiempo desde distintos dispositivos\n\nTe parece si te lo muestro en 15 minutos? 📅' }
+        ],
+        nextSteps: ['c_msg_coordinar'],
+        x: 700, y: 360
+      },
+      c_explain_vet: {
+        id: 'c_explain_vet', type: 'result', name: 'Explicacion - Veterinaria',
+        messages: [
+          { id: 'm1', label: 'Presentacion completa', text: 'Para una veterinaria, EASY GESTION tiene todo:\n\n🐶 HISTORIA CLINICA digital de cada mascota, con fotos y evolucion\n📅 TURNOS con recordatorio automatico por WhatsApp al dueno\n💊 STOCK de medicamentos con control de vencimientos\n🧾 FACTURACION electronica integrada\n📊 Reportes de que servicios dan mas ganancia\n\nTe lo muestro la semana que viene? 🐾' }
+        ],
+        nextSteps: ['c_msg_coordinar'],
+        x: 700, y: 460
+      },
+      c_explain_gastro: {
+        id: 'c_explain_gastro', type: 'result', name: 'Explicacion - Gastronomia',
+        messages: [
+          { id: 'm1', label: 'Presentacion completa', text: 'Para tu local, EASY GESTION hace:\n\n🍽️ MESAS y comandas en tiempo real desde la tablet del mozo\n🍕 COCINA con pantalla de pedidos (ya no hace falta gritar los pedidos)\n🛵 DELIVERY y pedidos online integrados\n🧺 STOCK de insumos con costo automatico\n💰 CAJA por turno\n\nTe muestro como queda configurado para tu local?' }
+        ],
+        nextSteps: ['c_msg_coordinar'],
+        x: 700, y: 560
+      },
+      c_explain_generico: {
+        id: 'c_explain_generico', type: 'result', name: 'Explicacion - Generico',
+        messages: [
+          { id: 'm1', label: 'Presentacion completa', text: 'EASY GESTION en tu negocio funciona asi:\n\n✅ Cargas tus productos con precio y stock\n✅ Cada venta descuenta del stock y suma a la caja automaticamente\n✅ Al final del dia ves cuanto vendiste, cuanto entra de ganancia y que falta reponer\n✅ Los clientes quedan guardados con su historial\n✅ Todo se ve desde el celular\n\nQue parte te genero mas dudas o te interesa ver primero?' }
+        ],
+        nextSteps: ['c_msg_coordinar'],
+        x: 700, y: 660
+      },
+      c_msg_coordinar: {
+        id: 'c_msg_coordinar', type: 'result', name: 'Coordinar reunion / demo',
+        messages: [
+          { id: 'm1', label: 'Proponer reunion', text: 'Buenisimo! Entonces coordino una demo para vos.\n\nSon 15-20 minutos por videollamada, te la comparto en pantalla y ves todo en vivo.\n\nQue dias tenes disponibles esta semana? Manana y pasado tengo lugar en la manana y al mediodia 📅' },
+          { id: 'm2', label: 'Confirmar horario', text: 'Perfecto! Anoto tu nombre y te reservo el horario.\n\n📅 Dia: [DIA]\n🕐 Hora: [HORA]\n\nTe mando el link de la videollamada por aca. Cualquier cambio avisame con tiempo.\n\nHasta pronto! 😊' }
+        ],
+        nextSteps: ['c_msg_specs'],
+        x: 380, y: 440
+      },
+      c_msg_specs: {
+        id: 'c_msg_specs', type: 'result', name: 'Verificar specs tecnicas',
+        messages: [
+          { id: 'm1', label: 'Verificacion pre-instalacion', text: 'Antes de la demo, 3 preguntas rapidas para dejar todo listo:\n\n1️⃣ Tenes internet en el local? (wifi o datos del celular sirve)\n2️⃣ Desde que dispositivo lo vas a usar principalmente? (celular, tablet o PC)\n3️⃣ Cuantos empleados van a usar el sistema?\n\nCon eso ya puedo preparar la instalacion para que sea express el dia de la demo 🛠️' },
+          { id: 'm2', label: 'Solo internet', text: 'Una pregunta rapida: tenes wifi o buena senal de datos en el local?\n\nCon eso es mas que suficiente para que funcione todo, incluso en hora pico 📶' }
+        ],
+        nextSteps: ['c_msg_cierre'],
+        x: 680, y: 440
+      },
+      c_msg_cierre: {
+        id: 'c_msg_cierre', type: 'result', name: 'Cerrar la venta',
+        messages: [
+          { id: 'm1', label: 'Cierre directo post-demo', text: 'Buenisimo! Y? Que te parecio?\n\nSi arrancamos hoy mismo, te damos todo incluido:\n✅ Instalacion y configuracion express\n✅ 7 dias de prueba sin pagar nada\n✅ Soporte por WhatsApp el primer mes\n\nArrancamos? 🚀' },
+          { id: 'm2', label: 'Cierre con precio y urgencia', text: 'El plan para tu negocio es $[PRECIO] por mes, con todo adentro.\n\nEsta semana tenemos una promo: primer mes a la mitad del precio si arrancas antes del viernes.\n\nTe lo pongo?\n\n💳 Transferencia o efectivo, vos elegis.' },
+          { id: 'm3', label: 'Follow-up sin respuesta', text: 'Hola [nombre]! Queria saber si te quedo alguna duda despues de la demo.\n\nMuchos me dicen que les parece caro o complicado al principio. Si es algo de eso, lo charlamos sin problema 😊\n\nQue te freno?' }
+        ],
+        nextSteps: [],
+        x: 980, y: 440
+      }
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  ESTADO
+// ═══════════════════════════════════════════════════════
+let STATE = {
+  flows: {}, templates: [],
+  flowId: null, stepHistory: [], currentStep: null,
+  aranaFlowId: null, aranaSelectedNode: null,
+  aranaLinkMode: false, aranaLinkSource: null,
+  aranaPan: { x: 0, y: 0 }, aranaScale: 1,
+  aranaPanning: false, aranaPanStart: { x: 0, y: 0 },
+  aranaDragging: null, aranaDragOffset: { x: 0, y: 0 },
+  modalEditId: null, stepModalContext: null, msgModalContext: null, optModalContext: null,
+};
+
+function loadState() {
+  try { const r = localStorage.getItem('eg_flows_v2'); STATE.flows = r ? JSON.parse(r) : JSON.parse(JSON.stringify(DEFAULT_FLOWS)); } catch(e) { STATE.flows = JSON.parse(JSON.stringify(DEFAULT_FLOWS)); }
+  try { const t = localStorage.getItem('eg_templates'); if (t) STATE.templates = JSON.parse(t); } catch(e) { STATE.templates = []; }
+}
+function saveFlows() { localStorage.setItem('eg_flows_v2', JSON.stringify(STATE.flows)); }
+function saveTmpl() { localStorage.setItem('eg_templates', JSON.stringify(STATE.templates)); }
+function uid() { return Math.random().toString(36).slice(2,8); }
+
+// ═══════════════════════════════════════════════════════
+//  NAVEGACION
+// ═══════════════════════════════════════════════════════
+const TOPBAR = {
+  flujo: ['Flujo de conversacion','Elegi el flujo y segui los pasos para obtener el mensaje exacto'],
+  arana: ['Mis mensajes por situacion','Toca una tarjeta para ver los mensajes y copiarlos al instante'],
+  ia: ['Sugerencia con IA','Pega el chat y la IA te dice que mandar ahora'],
+  plantillas: ['Mis plantillas','Crea y organiza tus mensajes reutilizables']
+};
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (!pg) return;
+  pg.classList.add('active');
+  if (el) el.classList.add('active');
+  const cw = document.getElementById('content-wrap');
+  if (id === 'arana') { cw.classList.add('nopad'); msjInit(); msjRender(); }
+  else cw.classList.remove('nopad');
+  document.getElementById('topbar-title').textContent = TOPBAR[id][0];
+  document.getElementById('topbar-sub').textContent = TOPBAR[id][1];
+  if (id === 'ia') renderIASelects();
+  if (id === 'plantillas') renderPlantillas();
+}
+
+// ═══════════════════════════════════════════════════════
+//  FLUJO
+// ═══════════════════════════════════════════════════════
+function renderFlowPicker() {
+  const grid = document.getElementById('flow-picker-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  Object.values(STATE.flows).forEach(f => {
+    const sc = Object.keys(f.steps).length;
+    const el = document.createElement('div');
+    el.className = 'flow-picker-card';
+    el.innerHTML = `<div class="flow-picker-icon">${f.icon||'💬'}</div><div class="flow-picker-title">${f.name}</div><div class="flow-picker-desc">${f.desc||''}</div><span class="flow-picker-count">${sc} pasos</span>`;
+    el.onclick = () => startFlow(f.id);
+    grid.appendChild(el);
+  });
+}
+
+function startFlow(flowId) {
+  STATE.flowId = flowId; STATE.stepHistory = [];
+  const flow = STATE.flows[flowId];
+  if (!flow) return;
+  gotoStep(flow.startStep);
+  document.getElementById('flow-picker').classList.add('hidden');
+  document.getElementById('flow-active-wrap').classList.remove('hidden');
+}
+
+function exitFlow() {
+  STATE.flowId = null; STATE.stepHistory = []; STATE.currentStep = null;
+  document.getElementById('flow-picker').classList.remove('hidden');
+  document.getElementById('flow-active-wrap').classList.add('hidden');
+  renderFlowPicker();
+  document.getElementById('breadcrumb').innerHTML = '';
+  document.getElementById('flow-main').innerHTML = '';
+}
+
+function restart() { if (STATE.flowId) startFlow(STATE.flowId); }
+
+function gotoStep(stepId) {
+  const flow = STATE.flows[STATE.flowId];
+  if (!flow || !flow.steps[stepId]) return;
+  STATE.currentStep = stepId;
+  const step = flow.steps[stepId];
+  renderBreadcrumb(step);
+  const main = document.getElementById('flow-main');
+  if (step.type === 'question') renderQuestion(step, main);
+  else renderResult(step, main);
+}
+
+function renderBreadcrumb(step) {
+  const bc = document.getElementById('breadcrumb');
+  STATE.stepHistory.push(step.id);
+  bc.innerHTML = STATE.stepHistory.map((sid, i) => {
+    const s = STATE.flows[STATE.flowId]?.steps[sid];
+    const name = s ? s.name : sid;
+    const last = i === STATE.stepHistory.length - 1;
+    return (i > 0 ? '<span class="bc-sep">›</span>' : '') + `<span class="bc-step${last?'" style="color:var(--green-dark);font-weight:600;':''}">${name}</span>`;
+  }).join('');
+}
+
+function renderQuestion(step, container) {
+  container.innerHTML = `
+    <div class="q-card">
+      <div class="q-step-label"><span>Paso: ${step.name}</span><button class="q-edit-btn" onclick="openStepModal('${STATE.flowId}','${step.id}')">✏️ Editar</button></div>
+      <div class="q-text">${step.question || step.name}</div>
+      <div class="options">
+        ${step.options.map((o,i) => `<button class="opt-btn" onclick="selectOption('${step.id}',${i})"><span class="opt-icon">${o.icon||'▸'}</span><span>${o.label}</span></button>`).join('')}
+        <button class="opt-btn opt-btn-add" onclick="openOptModal('${STATE.flowId}','${step.id}',null)">+ Agregar opcion</button>
+      </div>
+    </div>`;
+}
+
+function selectOption(stepId, optIdx) {
+  const flow = STATE.flows[STATE.flowId];
+  const opt = flow.steps[stepId]?.options?.[optIdx];
+  if (!opt) return;
+  if (opt.target && flow.steps[opt.target]) gotoStep(opt.target);
+  else alert('Este boton no tiene un paso destino configurado todavia.');
+}
+
+function renderResult(step, container) {
+  const msgs = step.messages || [];
+  const nextSteps = (step.nextSteps || []).filter(ns => STATE.flows[STATE.flowId]?.steps[ns]);
+  container.innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-title">💬 ${step.name}</div>
+        <div class="result-header-right">
+          <span class="result-count">${msgs.length} mensaje${msgs.length!==1?'s':''}</span>
+          <button class="q-edit-btn" onclick="openStepModal('${STATE.flowId}','${step.id}')">✏️ Editar</button>
+        </div>
+      </div>
+      <div class="result-body">
+        ${msgs.map((m,i) => `
+          <div class="variant">
+            <div class="variant-label-row">
+              <span class="variant-label">${m.label||'Mensaje '+(i+1)}</span>
+              <div class="variant-actions"><button class="variant-mini-btn" onclick="openMsgModal('${STATE.flowId}','${step.id}',${i})">✏️</button></div>
+            </div>
+            <div class="variant-text">${escHtml(m.text)}</div>
+            <div class="variant-footer"><button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(m.text)}')">📋 Copiar</button></div>
+          </div>`).join('')}
+        <button class="add-msg-btn" onclick="openMsgModal('${STATE.flowId}','${step.id}',null)">+ Agregar mensaje</button>
+      </div>
+    </div>
+    <div class="next-section">
+      <div class="next-label">Que hacer despues?</div>
+      <div class="next-btns">
+        ${nextSteps.map(ns => { const s = STATE.flows[STATE.flowId]?.steps[ns]; return `<button class="next-btn" onclick="gotoStep('${ns}')">${s?.name||ns} →</button>`; }).join('')}
+        <button class="next-btn next-btn-add" onclick="openOptModal('${STATE.flowId}','${step.id}',null,true)">+ Siguiente paso</button>
+        <button class="restart-btn" style="margin-left:auto;" onclick="restart()">↩ Reiniciar</button>
+      </div>
+    </div>`;
+}
+
+function copyMsg(btn, encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
+    btn.textContent = '✅ Copiado!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '📋 Copiar'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL: PASO
+// ═══════════════════════════════════════════════════════
+let _stepType = 'question';
+function openStepModal(flowId, stepId) {
+  STATE.stepModalContext = { flowId, stepId };
+  const step = STATE.flows[flowId]?.steps[stepId];
+  document.getElementById('step-modal-title').textContent = stepId ? 'Editar paso' : 'Nuevo paso';
+  document.getElementById('step-modal-name').value = step?.name || '';
+  document.getElementById('step-modal-question').value = step?.question || '';
+  document.getElementById('step-modal-delete').classList.toggle('hidden', !stepId);
+  setStepType(step?.type || 'question');
+  document.getElementById('step-modal-overlay').classList.remove('hidden');
+}
+function setStepType(t) {
+  _stepType = t;
+  document.getElementById('step-type-question').classList.toggle('sel', t==='question');
+  document.getElementById('step-type-result').classList.toggle('sel', t==='result');
+  document.getElementById('step-question-fields').style.display = t==='question' ? '' : 'none';
+  document.getElementById('step-result-fields').style.display = t==='result' ? '' : 'none';
+}
+function closeStepModal() { document.getElementById('step-modal-overlay').classList.add('hidden'); }
+function closeStepModalOutside(e) { if (e.target===e.currentTarget) closeStepModal(); }
+function saveStepModal() {
+  const ctx = STATE.stepModalContext; if (!ctx) return;
+  const flow = STATE.flows[ctx.flowId]; if (!flow) return;
+  const name = document.getElementById('step-modal-name').value.trim();
+  if (!name) { alert('Ingresa un nombre para el paso.'); return; }
+  const question = document.getElementById('step-modal-question').value.trim();
+  if (ctx.stepId) {
+    flow.steps[ctx.stepId].name = name;
+    flow.steps[ctx.stepId].type = _stepType;
+    if (_stepType==='question') flow.steps[ctx.stepId].question = question;
+  } else {
+    const sid = uid();
+    flow.steps[sid] = { id:sid, type:_stepType, name, question, options:[], messages:[], nextSteps:[], x:200, y:200 };
+  }
+  saveFlows(); closeStepModal();
+  if (STATE.flowId===ctx.flowId && STATE.currentStep===ctx.stepId) gotoStep(ctx.stepId);
+  renderArana();
+}
+function deleteCurrentStep() {
+  const ctx = STATE.stepModalContext; if (!ctx?.stepId) return;
+  if (!confirm('Eliminar este paso?')) return;
+  const flow = STATE.flows[ctx.flowId];
+  delete flow.steps[ctx.stepId];
+  Object.values(flow.steps).forEach(s => {
+    s.options = (s.options||[]).filter(o=>o.target!==ctx.stepId);
+    s.nextSteps = (s.nextSteps||[]).filter(n=>n!==ctx.stepId);
+  });
+  saveFlows(); closeStepModal();
+  if (STATE.currentStep===ctx.stepId) restart();
+  renderArana();
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL: MENSAJE
+// ═══════════════════════════════════════════════════════
+function openMsgModal(flowId, stepId, idx) {
+  STATE.msgModalContext = { flowId, stepId, idx };
+  const step = STATE.flows[flowId]?.steps[stepId];
+  const msg = idx!==null ? step?.messages?.[idx] : null;
+  document.getElementById('msg-modal-title').textContent = msg ? 'Editar mensaje' : 'Nuevo mensaje';
+  document.getElementById('msg-modal-label').value = msg?.label || '';
+  document.getElementById('msg-modal-text').value = msg?.text || '';
+  document.getElementById('msg-modal-delete').classList.toggle('hidden', idx===null);
+  document.getElementById('msg-modal-overlay').classList.remove('hidden');
+}
+function closeMsgModal() { document.getElementById('msg-modal-overlay').classList.add('hidden'); }
+function closeMsgModalOutside(e) { if (e.target===e.currentTarget) closeMsgModal(); }
+function saveMsgModal() {
+  const ctx = STATE.msgModalContext; if (!ctx) return;
+  const step = STATE.flows[ctx.flowId]?.steps[ctx.stepId]; if (!step) return;
+  const label = document.getElementById('msg-modal-label').value.trim() || ('Mensaje '+((step.messages?.length||0)+1));
+  const text = document.getElementById('msg-modal-text').value.trim();
+  if (!text) { alert('Escribe el texto del mensaje.'); return; }
+  if (!step.messages) step.messages = [];
+  if (ctx.idx!==null) step.messages[ctx.idx] = { ...step.messages[ctx.idx], label, text };
+  else step.messages.push({ id:uid(), label, text });
+  saveFlows(); closeMsgModal();
+  if (STATE.currentStep===ctx.stepId) gotoStep(ctx.stepId);
+  renderArana();
+}
+function deleteCurrentMsg() {
+  const ctx = STATE.msgModalContext; if (ctx?.idx===null) return;
+  if (!confirm('Eliminar este mensaje?')) return;
+  STATE.flows[ctx.flowId].steps[ctx.stepId].messages.splice(ctx.idx,1);
+  saveFlows(); closeMsgModal();
+  if (STATE.currentStep===ctx.stepId) gotoStep(ctx.stepId);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL: OPCION
+// ═══════════════════════════════════════════════════════
+function openOptModal(flowId, stepId, optIdx, isNext) {
+  STATE.optModalContext = { flowId, stepId, optIdx, isNext:!!isNext };
+  const flow = STATE.flows[flowId];
+  const step = flow?.steps[stepId];
+  const list = isNext ? (step?.nextSteps||[]) : (step?.options||[]);
+  const opt = optIdx!==null ? list[optIdx] : null;
+  document.getElementById('opt-modal-title').textContent = isNext ? (opt?'Editar siguiente paso':'Agregar siguiente paso') : (opt?'Editar opcion':'Nueva opcion');
+  document.getElementById('opt-modal-label').value = isNext ? '' : (opt?.label||'');
+  document.getElementById('opt-modal-icon').value = isNext ? '' : (opt?.icon||'');
+  document.getElementById('opt-modal-delete').classList.toggle('hidden', optIdx===null);
+  const sel = document.getElementById('opt-modal-target');
+  sel.innerHTML = '<option value="__new__">+ Crear paso nuevo</option>';
+  Object.values(flow.steps).filter(s=>s.id!==stepId).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name;
+    if (s.id===(isNext?list[optIdx]:opt?.target)) o.selected=true;
+    sel.appendChild(o);
+  });
+  if (!opt) sel.value = '__new__';
+  sel.onchange = () => document.getElementById('opt-modal-newname-wrap').classList.toggle('hidden', sel.value!=='__new__');
+  document.getElementById('opt-modal-newname-wrap').classList.toggle('hidden', sel.value!=='__new__');
+  document.getElementById('opt-modal-label').closest('.modal-field').style.display = isNext?'none':'';
+  document.getElementById('opt-modal-icon').closest('.modal-field').style.display = isNext?'none':'';
+  document.getElementById('opt-modal-overlay').classList.remove('hidden');
+}
+function closeOptModal() { document.getElementById('opt-modal-overlay').classList.add('hidden'); }
+function closeOptModalOutside(e) { if (e.target===e.currentTarget) closeOptModal(); }
+function saveOptModal() {
+  const ctx = STATE.optModalContext; if (!ctx) return;
+  const flow = STATE.flows[ctx.flowId];
+  const step = flow?.steps[ctx.stepId]; if (!step) return;
+  const sel = document.getElementById('opt-modal-target');
+  let targetId = sel.value;
+  if (targetId==='__new__') {
+    const nn = document.getElementById('opt-modal-newname').value.trim();
+    if (!nn) { alert('Escribe el nombre del paso nuevo.'); return; }
+    targetId = uid();
+    flow.steps[targetId] = { id:targetId, type:'result', name:nn, options:[], messages:[], nextSteps:[], x:500, y:200 };
+  }
+  if (ctx.isNext) {
+    if (!step.nextSteps) step.nextSteps=[];
+    if (ctx.optIdx!==null) step.nextSteps[ctx.optIdx]=targetId;
+    else if (!step.nextSteps.includes(targetId)) step.nextSteps.push(targetId);
+  } else {
+    const label=document.getElementById('opt-modal-label').value.trim();
+    const icon=document.getElementById('opt-modal-icon').value.trim()||'▸';
+    if (!label) { alert('Escribe el texto del boton.'); return; }
+    if (!step.options) step.options=[];
+    const newOpt={label,icon,target:targetId};
+    if (ctx.optIdx!==null) step.options[ctx.optIdx]=newOpt;
+    else step.options.push(newOpt);
+  }
+  saveFlows(); closeOptModal();
+  if (STATE.currentStep===ctx.stepId) gotoStep(ctx.stepId);
+  renderArana();
+}
+function deleteCurrentOpt() {
+  const ctx = STATE.optModalContext; if (ctx?.optIdx===null) return;
+  if (!confirm('Eliminar esta conexion?')) return;
+  const step = STATE.flows[ctx.flowId]?.steps[ctx.stepId];
+  if (ctx.isNext) step.nextSteps.splice(ctx.optIdx,1); else step.options.splice(ctx.optIdx,1);
+  saveFlows(); closeOptModal();
+  if (STATE.currentStep===ctx.stepId) gotoStep(ctx.stepId);
+  renderArana();
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL: FLUJO
+// ═══════════════════════════════════════════════════════
+function openFlowModal() { document.getElementById('flow-modal-overlay').classList.remove('hidden'); }
+function closeFlowModal() { document.getElementById('flow-modal-overlay').classList.add('hidden'); }
+function closeFlowModalOutside(e) { if (e.target===e.currentTarget) closeFlowModal(); }
+function saveFlowModal() {
+  const name=document.getElementById('flow-modal-name').value.trim();
+  if (!name) { alert('Ingresa un nombre para el flujo.'); return; }
+  const desc=document.getElementById('flow-modal-desc').value.trim();
+  const icon=document.getElementById('flow-modal-icon').value.trim()||'💬';
+  const fid=uid(); const startId=uid();
+  STATE.flows[fid]={ id:fid, name, desc, icon, startStep:startId, steps:{ [startId]:{ id:startId,type:'question',name:'Inicio del flujo',question:'Cual es la situacion?',options:[],messages:[],nextSteps:[],x:100,y:200 } } };
+  saveFlows(); closeFlowModal(); renderFlowPicker(); renderAranaFlowSelect();
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAPA ARANA
+// ═══════════════════════════════════════════════════════
+let _tempEdge = null;
+
+function aranaChangeFlow(fid) {
+  STATE.aranaFlowId=fid; STATE.aranaSelectedNode=null;
+  STATE.aranaLinkMode=false; STATE.aranaLinkSource=null;
+  closeSidePanel(); renderAranaNodes(); renderAranaEdges();
+}
+
+function renderAranaFlowSelect() {
+  const sel=document.getElementById('arana-flow-select'); if (!sel) return;
+  const prev=sel.value;
+  sel.innerHTML=Object.values(STATE.flows).map(f=>`<option value="${f.id}">${f.icon} ${f.name}</option>`).join('');
+  if (prev && STATE.flows[prev]) sel.value=prev;
+  if (!STATE.aranaFlowId||!STATE.flows[STATE.aranaFlowId]) STATE.aranaFlowId=sel.value;
+  sel.value=STATE.aranaFlowId;
+}
+
+function renderArana() {
+  renderAranaFlowSelect();
+  if (!STATE.aranaFlowId) STATE.aranaFlowId=Object.keys(STATE.flows)[0];
+  renderAranaNodes(); renderAranaEdges(); setupAranaCanvas();
+}
+
+function setupAranaCanvas() {
+  const wrap=document.getElementById('arana-canvas-wrap');
+  if (!wrap||wrap._arana_setup) return;
+  wrap._arana_setup=true;
+
+  wrap.addEventListener('mousedown', e => {
+    const isCanvas = e.target===wrap||e.target.classList.contains('arana-canvas')||e.target.classList.contains('arana-svg-layer');
+    if (!isCanvas) return;
+    STATE.aranaPanning=true;
+    STATE.aranaPanStart={x:e.clientX-STATE.aranaPan.x, y:e.clientY-STATE.aranaPan.y};
+    wrap.classList.add('panning');
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (STATE.aranaPanning) {
+      STATE.aranaPan.x=e.clientX-STATE.aranaPanStart.x;
+      STATE.aranaPan.y=e.clientY-STATE.aranaPanStart.y;
+      applyAranaTransform();
+    }
+    if (STATE.aranaDragging) {
+      const node=STATE.flows[STATE.aranaFlowId]?.steps[STATE.aranaDragging];
+      if (node) {
+        const s=STATE.aranaScale;
+        node.x=(e.clientX-STATE.aranaPan.x)/s-STATE.aranaDragOffset.x;
+        node.y=(e.clientY-STATE.aranaPan.y)/s-STATE.aranaDragOffset.y;
+        const el=document.getElementById('node-'+STATE.aranaDragging);
+        if (el) { el.style.left=node.x+'px'; el.style.top=node.y+'px'; }
+        renderAranaEdges();
+      }
+    }
+    if (STATE.aranaLinkMode&&STATE.aranaLinkSource&&_tempEdge) {
+      const rect=document.getElementById('arana-canvas-wrap').getBoundingClientRect();
+      const s=STATE.aranaScale;
+      const mx=(e.clientX-rect.left-STATE.aranaPan.x)/s;
+      const my=(e.clientY-rect.top-STATE.aranaPan.y)/s;
+      const src=STATE.flows[STATE.aranaFlowId]?.steps[STATE.aranaLinkSource];
+      if (src) {
+        _tempEdge.setAttribute('x1',src.x+190); _tempEdge.setAttribute('y1',src.y+40);
+        _tempEdge.setAttribute('x2',mx); _tempEdge.setAttribute('y2',my);
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (STATE.aranaPanning) { STATE.aranaPanning=false; wrap.classList.remove('panning'); saveFlows(); }
+    if (STATE.aranaDragging) { STATE.aranaDragging=null; saveFlows(); }
+    if (STATE.aranaLinkMode&&STATE.aranaLinkSource&&_tempEdge) { _tempEdge.remove(); _tempEdge=null; }
+  });
+
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    aranaZoom(e.deltaY>0?0.9:1.1, e.clientX, e.clientY);
+  }, {passive:false});
+}
+
+function applyAranaTransform() {
+  const c=document.getElementById('arana-canvas');
+  const svg=document.getElementById('arana-svg-layer');
+  const t=`translate(${STATE.aranaPan.x}px,${STATE.aranaPan.y}px) scale(${STATE.aranaScale})`;
+  if (c) c.style.transform=t;
+  if (svg) svg.style.transform=t;
+}
+
+function aranaZoom(factor, cx, cy) {
+  const wrap=document.getElementById('arana-canvas-wrap'); if (!wrap) return;
+  const rect=wrap.getBoundingClientRect();
+  cx=cx??rect.left+rect.width/2; cy=cy??rect.top+rect.height/2;
+  const prev=STATE.aranaScale;
+  STATE.aranaScale=Math.min(Math.max(STATE.aranaScale*factor,0.2),3);
+  const sf=STATE.aranaScale/prev;
+  STATE.aranaPan.x=cx-rect.left-(cx-rect.left-STATE.aranaPan.x)*sf;
+  STATE.aranaPan.y=cy-rect.top-(cy-rect.top-STATE.aranaPan.y)*sf;
+  applyAranaTransform();
+}
+
+function aranaResetView() {
+  STATE.aranaPan={x:60,y:40}; STATE.aranaScale=0.75;
+  applyAranaTransform();
+}
+
+function aranaAutoLayout() {
+  const flow=STATE.flows[STATE.aranaFlowId]; if (!flow) return;
+  const visited={}, colCounts={};
+  const queue=[{id:flow.startStep,col:0}];
+  while (queue.length) {
+    const {id,col}=queue.shift(); if (visited[id]) continue;
+    visited[id]=true;
+    if (!colCounts[col]) colCounts[col]=0;
+    flow.steps[id].x=col*240+40;
+    flow.steps[id].y=colCounts[col]*160+40;
+    colCounts[col]++;
+    const step=flow.steps[id];
+    [...(step.options||[]).map(o=>o.target),...(step.nextSteps||[])].filter(Boolean).forEach(t=>{
+      if (!visited[t]&&flow.steps[t]) queue.push({id:t,col:col+1});
+    });
+  }
+  Object.values(flow.steps).filter(s=>!visited[s.id]).forEach((s,i)=>{s.x=40;s.y=800+i*160;});
+  saveFlows(); renderAranaNodes(); renderAranaEdges(); aranaResetView();
+}
+
+function renderAranaNodes() {
+  const canvas=document.getElementById('arana-canvas'); if (!canvas) return;
+  canvas.innerHTML='';
+  const flow=STATE.flows[STATE.aranaFlowId]; if (!flow) return;
+  Object.values(flow.steps).forEach(step=>{
+    const el=document.createElement('div');
+    el.className='arana-node'+(step.type==='result'?' is-result':' is-question')+(step.id===flow.startStep?' is-start':'');
+    el.id='node-'+step.id;
+    el.style.left=(step.x||100)+'px'; el.style.top=(step.y||100)+'px';
+    const typeLabel=step.type==='result'?'💬 Mensajes':'❓ Pregunta';
+    const metaTxt=step.type==='result'?`${(step.messages||[]).length} mensajes`:`${(step.options||[]).length} opciones`;
+    const startBadge=step.id===flow.startStep?'<span style="font-size:9px;color:#2563eb;font-weight:700;">● INICIO</span>':'';
+    el.innerHTML=`
+      <div class="arana-node-label">${typeLabel} ${startBadge}</div>
+      <div class="arana-node-title">${step.name}</div>
+      <div class="arana-node-meta">${metaTxt}</div>
+      <div class="arana-node-del" onclick="event.stopPropagation();aranaDeleteNode('${step.id}')">✕</div>
+      <div class="arana-node-port" onmousedown="event.stopPropagation();aranaStartLink('${step.id}',event)"></div>`;
+    el.addEventListener('click',()=>{
+      if (STATE.aranaLinkMode&&STATE.aranaLinkSource) { aranaFinishLink(step.id); return; }
+      showAranaPanel(step.id);
+    });
+    el.addEventListener('mousedown', e=>{
+      if (e.target.classList.contains('arana-node-del')||e.target.classList.contains('arana-node-port')) return;
+      STATE.aranaDragging=step.id;
+      const s=STATE.aranaScale;
+      STATE.aranaDragOffset={x:(e.clientX-STATE.aranaPan.x)/s-step.x,y:(e.clientY-STATE.aranaPan.y)/s-step.y};
+      e.stopPropagation();
+    });
+    canvas.appendChild(el);
+  });
+  if (STATE.aranaSelectedNode) document.getElementById('node-'+STATE.aranaSelectedNode)?.classList.add('selected');
+}
+
+function aranaStartLink(sourceId, e) {
+  STATE.aranaLinkSource=sourceId;
+  const svg=document.getElementById('arana-svg-layer');
+  const src=STATE.flows[STATE.aranaFlowId]?.steps[sourceId];
+  _tempEdge=document.createElementNS('http://www.w3.org/2000/svg','line');
+  _tempEdge.setAttribute('stroke','#2563eb');
+  _tempEdge.setAttribute('stroke-width','2');
+  _tempEdge.setAttribute('stroke-dasharray','6,4');
+  _tempEdge.setAttribute('x1',src.x+190); _tempEdge.setAttribute('y1',src.y+40);
+  _tempEdge.setAttribute('x2',src.x+190); _tempEdge.setAttribute('y2',src.y+40);
+  svg.appendChild(_tempEdge);
+  document.getElementById('node-'+sourceId)?.classList.add('link-source');
+  document.getElementById('arana-canvas-wrap').classList.add('linking');
+  STATE.aranaLinkMode=true;
+  document.getElementById('arana-hint').textContent='Hace click en el nodo destino para conectar. ESC para cancelar.';
+}
+
+function aranaFinishLink(targetId) {
+  if (!STATE.aranaLinkSource||STATE.aranaLinkSource===targetId) { cancelAranaLink(); return; }
+  const flow=STATE.flows[STATE.aranaFlowId];
+  const src=flow.steps[STATE.aranaLinkSource];
+  cancelAranaLink();
+  if (src.type==='question') {
+    openOptModal(STATE.aranaFlowId, STATE.aranaLinkSource, null);
+    setTimeout(()=>{ const sel=document.getElementById('opt-modal-target'); if(sel){sel.value=targetId;sel.onchange();} },50);
+  } else {
+    if (!src.nextSteps) src.nextSteps=[];
+    if (!src.nextSteps.includes(targetId)) src.nextSteps.push(targetId);
+    saveFlows(); renderAranaEdges();
+  }
+}
+
+function cancelAranaLink() {
+  if (_tempEdge) { _tempEdge.remove(); _tempEdge=null; }
+  if (STATE.aranaLinkSource) document.getElementById('node-'+STATE.aranaLinkSource)?.classList.remove('link-source');
+  STATE.aranaLinkMode=false; STATE.aranaLinkSource=null;
+  document.getElementById('arana-canvas-wrap')?.classList.remove('linking');
+  document.getElementById('arana-hint').textContent='Click en un nodo para ver sus mensajes. Arrastra para mover. Arrastra desde el punto verde para conectar.';
+  const btn=document.getElementById('arana-link-btn');
+  if (btn) { btn.classList.remove('active-mode'); btn.textContent='🔗 Conectar'; }
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') cancelAranaLink(); });
+
+function aranaToggleLinkMode() {
+  const btn=document.getElementById('arana-link-btn');
+  if (STATE.aranaLinkMode&&!STATE.aranaLinkSource) { cancelAranaLink(); return; }
+  STATE.aranaLinkMode=true; STATE.aranaLinkSource=null;
+  btn.classList.add('active-mode'); btn.textContent='✕ Cancelar';
+  document.getElementById('arana-canvas-wrap').classList.add('linking');
+  document.getElementById('arana-hint').textContent='Arrastra desde el punto verde de un nodo al nodo destino. ESC para cancelar.';
+}
+
+function renderAranaEdges() {
+  const svg=document.getElementById('arana-svg-layer'); if (!svg) return;
+  Array.from(svg.children).forEach(c=>{ if(c!==_tempEdge&&c.tagName!=='defs') c.remove(); });
+  const flow=STATE.flows[STATE.aranaFlowId]; if (!flow) return;
+  const edges=[];
+  Object.values(flow.steps).forEach(step=>{
+    (step.options||[]).forEach((opt,i)=>{ if(opt.target&&flow.steps[opt.target]) edges.push({from:step.id,to:opt.target,label:opt.label,type:'option'}); });
+    (step.nextSteps||[]).forEach(ns=>{ if(flow.steps[ns]) edges.push({from:step.id,to:ns,label:'continua',type:'next'}); });
+  });
+  edges.forEach(e=>{
+    const fs=flow.steps[e.from], ts=flow.steps[e.to];
+    const x1=fs.x+190, y1=fs.y+40, x2=ts.x, y2=ts.y+40, mx=(x1+x2)/2;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    path.setAttribute('stroke',e.type==='next'?'#2d9e62':'#b45309');
+    path.setAttribute('stroke-width','1.8');
+    path.setAttribute('fill','none');
+    path.setAttribute('marker-end',`url(#arrow-${e.type==='next'?'green':'amber'})`);
+    svg.appendChild(path);
+    if (e.label&&e.label.length<40) {
+      const text=document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x',mx); text.setAttribute('y',(y1+y2)/2-4);
+      text.setAttribute('text-anchor','middle'); text.setAttribute('class','arana-edge-label');
+      text.textContent=e.label.length>24?e.label.slice(0,24)+'…':e.label;
+      svg.appendChild(text);
+    }
+  });
+  if (!svg.querySelector('defs')) {
+    const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+    ['green','amber'].forEach(c=>{
+      const m=document.createElementNS('http://www.w3.org/2000/svg','marker');
+      m.setAttribute('id','arrow-'+c); m.setAttribute('markerWidth','8'); m.setAttribute('markerHeight','8');
+      m.setAttribute('refX','6'); m.setAttribute('refY','3'); m.setAttribute('orient','auto');
+      const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('points','0 0, 8 3, 0 6');
+      poly.setAttribute('fill',c==='green'?'#2d9e62':'#b45309');
+      m.appendChild(poly); defs.appendChild(m);
+    });
+    svg.insertBefore(defs,svg.firstChild);
+  }
+}
+
+function showAranaPanel(stepId) {
+  STATE.aranaSelectedNode=stepId;
+  document.querySelectorAll('.arana-node').forEach(n=>n.classList.remove('selected'));
+  document.getElementById('node-'+stepId)?.classList.add('selected');
+  const flow=STATE.flows[STATE.aranaFlowId];
+  const step=flow?.steps[stepId]; if (!step) return;
+  const msgs=step.messages||[], opts=step.options||[], nexts=step.nextSteps||[];
+  const typeLabel=step.type==='result'?'💬 Mensajes':'❓ Pregunta';
+  const msgsHtml=msgs.length?msgs.map((m,i)=>`
+    <div style="border:1px solid var(--gray-200);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;margin-bottom:4px;display:flex;justify-content:space-between;">${m.label||'Mensaje '+(i+1)}<button onclick="openMsgModal('${STATE.aranaFlowId}','${stepId}',${i})" style="border:none;background:none;color:var(--gray-400);cursor:pointer;">✏️</button></div>
+      <div style="font-size:12px;color:var(--gray-600);line-height:1.6;max-height:70px;overflow:hidden;">${escHtml(m.text)}</div>
+      <div style="text-align:right;margin-top:6px;"><button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(m.text)}')">📋 Copiar</button></div>
+    </div>`).join(''):'<div style="color:var(--gray-400);font-size:12px;">Sin mensajes aun.</div>';
+  const connsHtml=[...opts.map((o,i)=>`<div class="arana-conn-item"><span>${o.icon||'▸'} ${o.label} → <b>${flow.steps[o.target]?.name||o.target}</b></span><button class="arana-conn-del" onclick="openOptModal('${STATE.aranaFlowId}','${stepId}',${i},false)">✏️</button></div>`),
+    ...nexts.map((ns,i)=>`<div class="arana-conn-item"><span>→ ${flow.steps[ns]?.name||ns}</span><button class="arana-conn-del" onclick="openOptModal('${STATE.aranaFlowId}','${stepId}',${i},true)">✏️</button></div>`)].join('')||'<div style="color:var(--gray-400);font-size:12px;">Sin conexiones salientes.</div>';
+  const panel=document.getElementById('arana-sidepanel');
+  panel.innerHTML=`
+    <div class="arana-sidepanel-head">
+      <div><div class="arana-sidepanel-title">${step.name}</div><div class="arana-sidepanel-sub">${typeLabel}${step.id===flow.startStep?' · 🔵 Inicio':''}</div></div>
+      <button class="arana-sidepanel-close" onclick="closeSidePanel()">✕</button>
+    </div>
+    <div class="arana-sidepanel-body">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-400);margin-bottom:8px;">Mensajes</div>
+      ${msgsHtml}
+      <button class="add-msg-btn" style="margin-top:4px;" onclick="openMsgModal('${STATE.aranaFlowId}','${stepId}',null)">+ Agregar mensaje</button>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-400);margin:18px 0 8px;">Conexiones salientes</div>
+      ${connsHtml}
+      <button class="add-msg-btn" style="margin-top:4px;" onclick="openOptModal('${STATE.aranaFlowId}','${stepId}',null,${step.type==='result'})">+ Agregar conexion</button>
+    </div>
+    <div class="arana-sidepanel-foot">
+      <button class="btn-save" style="flex:1;" onclick="openStepModal('${STATE.aranaFlowId}','${stepId}')">✏️ Editar paso</button>
+      <button class="btn-danger" onclick="aranaDeleteNode('${stepId}')">🗑</button>
+    </div>`;
+  panel.classList.remove('hidden-panel');
+}
+
+function closeSidePanel() {
+  document.getElementById('arana-sidepanel')?.classList.add('hidden-panel');
+  STATE.aranaSelectedNode=null;
+  document.querySelectorAll('.arana-node').forEach(n=>n.classList.remove('selected'));
+}
+
+function aranaAddNode() { openStepModal(STATE.aranaFlowId, null); }
+
+function aranaDeleteNode(stepId) {
+  if (!confirm('Eliminar este paso?')) return;
+  const flow=STATE.flows[STATE.aranaFlowId];
+  delete flow.steps[stepId];
+  Object.values(flow.steps).forEach(s=>{
+    s.options=(s.options||[]).filter(o=>o.target!==stepId);
+    s.nextSteps=(s.nextSteps||[]).filter(n=>n!==stepId);
+  });
+  saveFlows(); closeSidePanel(); renderAranaNodes(); renderAranaEdges();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PLANTILLAS
+// ═══════════════════════════════════════════════════════
+function renderPlantillas() {
+  const grid=document.getElementById('tmpl-grid'); if (!grid) return;
+  const q=(document.getElementById('tmpl-search')?.value||'').toLowerCase();
+  const c=document.getElementById('tmpl-cat-filter')?.value||'';
+  const list=STATE.templates.filter(t=>(!q||t.name.toLowerCase().includes(q)||t.text.toLowerCase().includes(q))&&(!c||t.cat===c));
+  if (!list.length) { grid.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>No hay plantillas todavia. Crea la primera con el boton de arriba.</p></div>'; return; }
+  grid.innerHTML=list.map((t,i)=>`
+    <div class="tmpl-card">
+      <div class="tmpl-card-top">
+        <div class="tmpl-card-meta">
+          <span class="tmpl-card-cat">${t.cat||'Custom'}</span>
+          <div class="tmpl-card-title">${t.name}</div>
+          ${t.rubro?`<div style="font-size:11px;color:var(--gray-400);">${t.rubro}</div>`:''}
+        </div>
+        <div class="tmpl-card-actions">
+          <button class="tmpl-icon-btn" onclick="openModal(${i})">✏️</button>
+          <button class="tmpl-icon-btn" onclick="deleteTmpl(${i})">🗑</button>
+        </div>
+      </div>
+      <div class="tmpl-card-text">${t.text.slice(0,140)}${t.text.length>140?'…':''}</div>
+      <button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(t.text)}')">📋 Copiar</button>
+    </div>`).join('');
+}
+
+function filterPlantillas() { renderPlantillas(); }
+
+function openModal(idx) {
+  STATE.modalEditId=idx!==undefined?idx:null;
+  const t=idx!==undefined?STATE.templates[idx]:null;
+  document.getElementById('modal-title').textContent=t?'Editar plantilla':'Nueva plantilla';
+  document.getElementById('modal-name').value=t?.name||'';
+  document.getElementById('modal-cat').value=t?.cat||'Custom';
+  document.getElementById('modal-rubro').value=t?.rubro||'';
+  document.getElementById('modal-text').value=t?.text||'';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function closeModalOutside(e) { if(e.target===e.currentTarget) closeModal(); }
+function saveTemplate() {
+  const name=document.getElementById('modal-name').value.trim();
+  const text=document.getElementById('modal-text').value.trim();
+  if (!name||!text) { alert('Completa el nombre y el texto.'); return; }
+  const tmpl={name,cat:document.getElementById('modal-cat').value,rubro:document.getElementById('modal-rubro').value.trim(),text};
+  if (STATE.modalEditId!==null) STATE.templates[STATE.modalEditId]=tmpl; else STATE.templates.push(tmpl);
+  saveTmpl(); closeModal(); renderPlantillas();
+}
+function deleteTmpl(idx) {
+  if (!confirm('Eliminar esta plantilla?')) return;
+  STATE.templates.splice(idx,1); saveTmpl(); renderPlantillas();
+}
+
+// ═══════════════════════════════════════════════════════
+//  IA
+// ═══════════════════════════════════════════════════════
+const RUBROS_IA=['Kiosco / minimercado','Ferreteria / corralon','Veterinaria','Restaurante / bar / cafe','Salon de belleza / peluqueria','Farmacia / perfumeria','Libreria / bazar','Taller / mecanica','Gym / club deportivo','Indumentaria / ropa','Electronica / celulares','Supermercado / almacen','Panaderia / confiteria','Optica','Papeleria / imprenta','Otro / no se'];
+
+function renderIASelects() {
+  const sel=document.getElementById('ia-rubro');
+  if (sel&&!sel.options.length) RUBROS_IA.forEach(r=>{const o=document.createElement('option');o.textContent=r;sel.appendChild(o);});
+}
+
+async function runIA() {
+  const rubro=document.getElementById('ia-rubro').value;
+  const sit=document.getElementById('ia-situacion').value;
+  const conv=document.getElementById('ia-conv').value.trim();
+  const btn=document.getElementById('ia-btn'),sp=document.getElementById('ia-spinner'),btnText=document.getElementById('ia-btn-text');
+  const result=document.getElementById('ia-result'),body=document.getElementById('ia-result-body');
+  btn.disabled=true; sp.classList.remove('hidden'); btnText.textContent='Generando...';
+  result.classList.add('hidden');
+  const sits={primer_contacto:'primer contacto, nunca hubo conversacion',colgo:'se colgo / quedo en silencio',hablando:'conversacion activa, mostro interes',proponer_demo:'quiero proponer demo o reunion',no_interesa:'dijo que no le interesa',tiene_sistema:'dijo que ya tiene otro sistema'};
+  const prompt=`Sos un experto en ventas de software de gestion para pequenos negocios en Argentina. Trabajas para EASY GESTION.\n\nRubro del lead: ${rubro}\nSituacion actual: ${sits[sit]||sit}\n${conv?`Historial:\n${conv}\n`:''}\nGenera 2 mensajes de WhatsApp diferentes. En espanol argentino, sin acentos, concretos, con emojis puntuales, adaptados al rubro.\n\nResponde SOLO en JSON sin backticks:\n{"msgs":[{"label":"Enfoque A - [descripcion]","text":"..."},{"label":"Enfoque B - [descripcion]","text":"..."}]}`;
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const rawText=data.content?.map(c=>c.text||'').join('')||'';
+    const parsed=JSON.parse(rawText.replace(/```json|```/g,'').trim());
+    body.innerHTML=parsed.msgs.map(m=>`<div class="ia-msg-card"><div class="ia-msg-card-label">${m.label}</div><div class="ia-msg-card-text">${escHtml(m.text)}</div><div class="ia-msg-card-footer"><button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(m.text)}')">📋 Copiar</button></div></div>`).join('');
+    result.classList.remove('hidden');
+  } catch(err) {
+    body.innerHTML=`<div style="color:var(--red);font-size:13px;">Error al generar. Intenta de nuevo.<br><small>${err.message}</small></div>`;
+    result.classList.remove('hidden');
+  }
+  btn.disabled=false; sp.classList.add('hidden'); btnText.textContent='✨ Generar sugerencia';
+}
+
+
+// ════════════════════════════════════════════════════════
+//  MIS MENSAJES POR SITUACION
+// ════════════════════════════════════════════════════════
+
+const MSJ_DEFAULTS = [
+  {
+    id:'m1', x:80, y:60, emoji:'👋', label:'Contacto inicial',
+    color:'#54bfda',
+    msgs:[
+      {label:'Opcion A — Asesoramiento', text:'¡Hola! Te escribimos del equipo de EASY GESTION para darte una mano con tu negocio. ¿A qué rubro te dedicás así te asesoramos mejor? 😊'},
+      {label:'Opcion B — Solución ideal', text:'¡Hola! ¿Cómo va? Desde el equipo de EASY GESTION queremos conocer tu comercio para enviarte la solución ideal. ¿Qué rubro tenés? 🚀'},
+      {label:'Opcion C — Optimización', text:'¡Hola! Esperamos que estés muy bien. Queremos contarte cómo optimizar tu día a día con EASY GESTION, ¿de qué es tu negocio? 👋'},
+    ]
+  },
+  {
+    id:'m2', x:340, y:60, emoji:'😴', label:'No contestó / Se colgó',
+    color:'#7c3aed',
+    msgs:[
+      {label:'Opcion A — Retomar el hilo', text:'¡Hola! Esperamos que estés muy bien. ¿Nos contás un poquito qué rubro es tu negocio? Así el equipo te asesora mejor según lo que necesitás. 👍'},
+      {label:'Opcion B — Charla abierta', text:'¡Hola! ¿Cómo va todo? Nos quedamos con ganas de conocer tu negocio. Cuando tengas un minuto, contanos a qué te dedicás y lo charlamos. 👋'},
+      {label:'Opcion C — Stock/ventas', text:'¡Hola! ¿Cómo va? Queríamos saber si todavía están buscando organizar sus ventas y stock. ¿Pudieron definir el rubro de su local? 📊'},
+    ]
+  },
+  {
+    id:'m3', x:600, y:60, emoji:'❓', label:'No sé el rubro',
+    color:'#d97706',
+    msgs:[
+      {label:'Opcion A — Con numeros', text:'¿Querés optimizar tu negocio con EASY GESTION? 🚀 Contanos tu rubro y el equipo te asesora: 1. Kiosco | 2. Ferretería | 3. Indumentaria | 4. Otro'},
+      {label:'Opcion B — Directa', text:'¡Hola! Para darte el asesoramiento correcto desde el equipo de EASY GESTION, ¿tu comercio es de Kiosco, Ferretería, Indumentaria u otro rubro? 💬'},
+    ]
+  },
+  {
+    id:'m4', x:80, y:260, emoji:'🏪', label:'Rubro: Kiosco / Almacén',
+    color:'#059669',
+    msgs:[
+      {label:'Seguimiento', text:'¡Hola! Desde el equipo de EASY GESTION queríamos saludarte. ¿Seguís buscando un sistema para tu kiosco/almacén o ya pudiste resolverlo? 😊'},
+    ]
+  },
+  {
+    id:'m5', x:340, y:260, emoji:'🔧', label:'Rubro: Ferretería / Corralón',
+    color:'#dc2626',
+    msgs:[
+      {label:'Seguimiento', text:'¡Hola! ¿Cómo va? Del equipo de EASY GESTION queremos consultarte: ¿seguís buscando un software de control de stock para tu ferretería? 🔧'},
+    ]
+  },
+  {
+    id:'m6', x:600, y:260, emoji:'👕', label:'Rubro: Indumentaria / Zapatería',
+    color:'#be185d',
+    msgs:[
+      {label:'Seguimiento', text:'¡Hola! Te escribimos del equipo de EASY GESTION. ¿Seguís buscando un sistema para organizar las ventas y talles de tu local de ropa? 👕'},
+    ]
+  },
+  {
+    id:'m7', x:210, y:460, emoji:'📅', label:'No se unió al Meet/Zoom',
+    color:'#0891b2',
+    msgs:[
+      {label:'Reagendar', text:'¡Hola! ¿Cómo va? Vimos que no pudiste conectarte a nuestra reunión. ¿Cuándo te vendría bien reagendar? Tenemos disponibilidad esta semana. 📅'},
+      {label:'Nueva propuesta', text:'¡Hola! Sin problema, entendemos que a veces surgen imprevistos. ¿Qué día y horario te queda mejor para la demo de EASY GESTION? 😊'},
+    ]
+  },
+  {
+    id:'m8', x:500, y:460, emoji:'🧀', label:'Rubro: Fiambrería / Gastro',
+    color:'#65a30d',
+    msgs:[
+      {label:'Seguimiento', text:'¡Hola! Esperamos que estés muy bien. Desde el equipo de EASY GESTION te consultamos: ¿seguís buscando software de gestión para tu fiambrería? 🧀'},
+    ]
+  },
+];
+
+const MSJ_DEFAULT_EDGES = [
+  {from:'m1', to:'m2'},
+  {from:'m1', to:'m3'},
+  {from:'m2', to:'m4'},
+  {from:'m2', to:'m5'},
+  {from:'m2', to:'m6'},
+  {from:'m3', to:'m4'},
+  {from:'m3', to:'m5'},
+  {from:'m3', to:'m6'},
+  {from:'m3', to:'m8'},
+  {from:'m1', to:'m7'},
+  {from:'m2', to:'m7'},
+];
+
+let msjCards = [], msjEdges = [];
+let msjPan = {x:0, y:0}, msjScale = 1;
+let msjDragging = null, msjDragOff = {x:0,y:0};
+let msjIsPanning = false, msjPanStart = {x:0,y:0};
+let msjConnecting = false, msjConnectFrom = null;
+let msjSelectedId = null, msjEditingId = null;
+let msjInitDone = false;
+
+function msjLoad() {
+  try {
+    const s = localStorage.getItem('eg_msj_v1');
+    if (s) { const d=JSON.parse(s); msjCards=d.cards; msjEdges=d.edges; return; }
+  } catch(e){}
+  msjCards = JSON.parse(JSON.stringify(MSJ_DEFAULTS));
+  msjEdges = JSON.parse(JSON.stringify(MSJ_DEFAULT_EDGES));
+}
+function msjSave() {
+  localStorage.setItem('eg_msj_v1', JSON.stringify({cards:msjCards, edges:msjEdges}));
+  if(window.FB) window.FB.saveMsj && window.FB.saveMsj({cards:msjCards, edges:msjEdges});
+}
+
+function msjInit() {
+  if (msjInitDone) return;
+  msjInitDone = true;
+  msjLoad();
+  msjRender();
+  const wrap = document.getElementById('msj-canvas-wrap');
+  if (!wrap) return;
+  wrap.addEventListener('mousedown', msjOnMouseDown);
+  wrap.addEventListener('mousemove', msjOnMouseMove);
+  wrap.addEventListener('mouseup', msjOnMouseUp);
+  wrap.addEventListener('dblclick', msjOnDblClick);
+  wrap.addEventListener('wheel', msjOnWheel, {passive:false});
+  window.addEventListener('resize', msjRenderEdges);
+}
+
+function msjWtoS(wx,wy) { return {x: wx*msjScale+msjPan.x, y: wy*msjScale+msjPan.y}; }
+function msjStoW(sx,sy) { return {x:(sx-msjPan.x)/msjScale, y:(sy-msjPan.y)/msjScale}; }
+
+function msjGetCard(el) {
+  let t = el;
+  while(t && !t.dataset.msjId) t=t.parentElement;
+  return t ? msjCards.find(c=>c.id===t.dataset.msjId) : null;
+}
+
+function msjRender() {
+  msjRenderCards();
+  msjRenderEdges();
+}
+
+function msjRenderCards() {
+  const canvas = document.getElementById('msj-canvas');
+  if (!canvas) return;
+  canvas.innerHTML = '';
+  msjCards.forEach(card => {
+    const s = msjWtoS(card.x, card.y);
+    const div = document.createElement('div');
+    div.className = 'msj-card' +
+      (msjSelectedId===card.id ? ' selected' : '') +
+      (msjConnectFrom===card.id ? ' connect-source' : '');
+    div.dataset.msjId = card.id;
+    div.style.cssText = `left:${s.x}px;top:${s.y}px;width:${180*msjScale}px;`;
+    div.innerHTML = `
+      <div class="msj-card-header">
+        <span class="msj-card-emoji" style="font-size:${22*msjScale}px">${card.emoji||'💬'}</span>
+        <span class="msj-card-label" style="font-size:${Math.max(10,12*msjScale)}px">${card.label}</span>
+      </div>
+      <div class="msj-card-footer">
+        <span class="msj-card-count" style="font-size:${Math.max(9,11*msjScale)}px">${card.msgs.length} mensaje${card.msgs.length!==1?'s':''}</span>
+        <div class="msj-card-dot" style="width:${14*msjScale}px;height:${14*msjScale}px;background:${card.color}" data-dot="1" data-msj-id="${card.id}"></div>
+      </div>
+      <div style="height:4px;background:${card.color};border-radius:0 0 14px 14px;"></div>
+    `;
+    canvas.appendChild(div);
+  });
+}
+
+function msjRenderEdges() {
+  const svg = document.getElementById('msj-svg');
+  const wrap = document.getElementById('msj-canvas-wrap');
+  if (!svg || !wrap) return;
+  // Asegurar marcador flecha
+  svg.innerHTML = `<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#54bfda"/>
+  </marker></defs>`;
+  msjEdges.forEach(e => {
+    const from = msjCards.find(c=>c.id===e.from);
+    const to = msjCards.find(c=>c.id===e.to);
+    if (!from||!to) return;
+    const fw = 180, fh = 80;
+    const fs = msjWtoS(from.x+fw/2, from.y+fh);
+    const ts = msjWtoS(to.x+fw/2, to.y);
+    const cy1 = fs.y + 40*msjScale;
+    const cy2 = ts.y - 40*msjScale;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('class','edge-line');
+    path.setAttribute('d',`M${fs.x},${fs.y} C${fs.x},${cy1} ${ts.x},${cy2} ${ts.x},${ts.y}`);
+    path.style.stroke = from.color||'#54bfda';
+    // click para eliminar
+    path.style.pointerEvents='stroke';
+    path.style.cursor='pointer';
+    path.addEventListener('click',()=>{
+      if(confirm('¿Eliminar esta conexión?')) {
+        msjEdges=msjEdges.filter(x=>!(x.from===e.from&&x.to===e.to));
+        msjSave(); msjRenderEdges();
+      }
+    });
+    svg.appendChild(path);
+  });
+}
+
+function msjGetWrapPos(e) {
+  const r = document.getElementById('msj-canvas-wrap').getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+function msjGetCardAtScreen(sx,sy) {
+  const w = msjStoW(sx,sy);
+  const cw=180, ch=80;
+  for(let i=msjCards.length-1;i>=0;i--) {
+    const c=msjCards[i];
+    if(w.x>=c.x&&w.x<=c.x+cw&&w.y>=c.y&&w.y<=c.y+ch) return c;
+  }
+  return null;
+}
+
+function msjOnMouseDown(e) {
+  const pos = msjGetWrapPos(e);
+  // Check if clicked on dot (connector)
+  const dotEl = e.target.closest('[data-dot]');
+  if (dotEl) {
+    const card = msjCards.find(c=>c.id===dotEl.dataset.msjId);
+    if (card) { msjStartConnect(card); return; }
+  }
+  const card = msjGetCardAtScreen(pos.x, pos.y);
+  if (msjConnecting) {
+    if (card) msjFinishConnect(card);
+    return;
+  }
+  if (card) {
+    msjSelectedId = card.id;
+    msjShowPanel(card);
+    msjDragging = card;
+    const w = msjStoW(pos.x,pos.y);
+    msjDragOff = {x:w.x-card.x, y:w.y-card.y};
+    document.getElementById('msj-canvas-wrap').classList.add('grabbing');
+    msjRenderCards();
+  } else {
+    msjSelectedId = null;
+    msjIsPanning = true;
+    msjPanStart = {x:pos.x-msjPan.x, y:pos.y-msjPan.y};
+    document.getElementById('msj-canvas-wrap').classList.add('grabbing');
+  }
+}
+function msjOnMouseMove(e) {
+  const pos = msjGetWrapPos(e);
+  if (msjDragging) {
+    const w = msjStoW(pos.x,pos.y);
+    msjDragging.x = w.x-msjDragOff.x;
+    msjDragging.y = w.y-msjDragOff.y;
+    msjRenderCards(); msjRenderEdges();
+  } else if (msjIsPanning) {
+    msjPan.x = pos.x-msjPanStart.x;
+    msjPan.y = pos.y-msjPanStart.y;
+    msjRenderCards(); msjRenderEdges();
+  }
+}
+function msjOnMouseUp() {
+  if (msjDragging) msjSave();
+  msjDragging = null; msjIsPanning = false;
+  document.getElementById('msj-canvas-wrap').classList.remove('grabbing');
+}
+function msjOnDblClick(e) {
+  const pos = msjGetWrapPos(e);
+  const card = msjGetCardAtScreen(pos.x,pos.y);
+  if (card) msjOpenModal(card);
+}
+function msjOnWheel(e) {
+  e.preventDefault();
+  const pos = msjGetWrapPos(e);
+  const delta = e.deltaY>0?0.9:1.1;
+  const ns = Math.min(2,Math.max(0.3,msjScale*delta));
+  msjPan.x = pos.x-(pos.x-msjPan.x)*(ns/msjScale);
+  msjPan.y = pos.y-(pos.y-msjPan.y)*(ns/msjScale);
+  msjScale = ns;
+  msjRenderCards(); msjRenderEdges();
+}
+
+function msjStartConnect(card) {
+  msjConnecting = true;
+  msjConnectFrom = card.id;
+  document.getElementById('msj-canvas-wrap').classList.add('connecting');
+  document.getElementById('msj-hint').textContent = `Origen: "${card.label}" — ahora click en el destino`;
+  document.getElementById('msj-connect-btn').classList.add('active');
+  msjRenderCards();
+}
+function msjFinishConnect(toCard) {
+  if (toCard.id!==msjConnectFrom) {
+    const exists = msjEdges.some(e=>(e.from===msjConnectFrom&&e.to===toCard.id)||(e.from===toCard.id&&e.to===msjConnectFrom));
+    if (!exists) { msjEdges.push({from:msjConnectFrom,to:toCard.id}); msjSave(); }
+  }
+  msjStopConnect();
+}
+function msjStopConnect() {
+  msjConnecting=false; msjConnectFrom=null;
+  document.getElementById('msj-canvas-wrap').classList.remove('connecting');
+  document.getElementById('msj-hint').textContent='Click en una tarjeta para ver sus mensajes · Doble click para editar · Arrastra para mover';
+  document.getElementById('msj-connect-btn').classList.remove('active');
+  msjRenderCards(); msjRenderEdges();
+}
+function msjToggleConnect() {
+  if (msjConnecting) msjStopConnect();
+  else {
+    msjConnecting=true; msjConnectFrom=null;
+    document.getElementById('msj-canvas-wrap').classList.add('connecting');
+    document.getElementById('msj-connect-btn').classList.add('active');
+    document.getElementById('msj-hint').textContent='Modo conexión: click en el punto de color de la tarjeta origen, luego en la destino';
+  }
+}
+
+function msjShowPanel(card) {
+  const panel = document.getElementById('msj-panel');
+  panel.classList.remove('hidden');
+  document.getElementById('msj-panel-title').textContent = `${card.emoji||''} ${card.label}`;
+  const body = document.getElementById('msj-panel-body');
+  if (!card.msgs.length) { body.innerHTML='<div class="msj-empty">No hay mensajes. Doble click para agregar.</div>'; return; }
+  body.innerHTML = card.msgs.map((m,i)=>`
+    <div class="msj-msg-card">
+      <div class="msj-msg-label">${m.label||'Opcion '+(i+1)}</div>
+      <div class="msj-msg-text">${escHtml(m.text)}</div>
+      <button class="msj-copy-btn" id="mcp-${card.id}-${i}" onclick="msjCopy(this,'${encodeURIComponent(m.text)}')">📋</button>
+    </div>`).join('');
+}
+function msjClosePanel() {
+  document.getElementById('msj-panel').classList.add('hidden');
+  msjSelectedId=null; msjRenderCards();
+}
+function msjEditSelected() {
+  const card = msjCards.find(c=>c.id===msjSelectedId);
+  if(card) msjOpenModal(card);
+}
+function msjCopy(btn, encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded)).then(()=>{
+    btn.textContent='✅'; btn.classList.add('ok');
+    setTimeout(()=>{ btn.textContent='📋'; btn.classList.remove('ok'); },2000);
+  });
+}
+
+// MODAL
+function msjOpenModal(card) {
+  msjEditingId = card ? card.id : null;
+  document.getElementById('msj-modal-title').textContent = card ? 'Editar situacion' : 'Nueva situacion';
+  document.getElementById('msj-modal-name').value = card ? card.label : '';
+  document.getElementById('msj-modal-emoji').value = card ? (card.emoji||'') : '';
+  document.getElementById('msj-modal-delete').style.display = card ? 'flex' : 'none';
+  const msgs = card ? card.msgs : [];
+  msjRenderMsgFields(msgs);
+  document.getElementById('msj-modal-overlay').classList.remove('hidden');
+}
+function msjRenderMsgFields(msgs) {
+  document.getElementById('msj-modal-msgs').innerHTML = msgs.map((m,i)=>`
+    <div class="msj-msg-row" data-i="${i}">
+      <textarea rows="3" placeholder="Texto del mensaje...">${m.text}</textarea>
+      <button class="msj-remove-btn" onclick="this.parentElement.remove()">×</button>
+    </div>`).join('');
+}
+function msjAddMsgField() {
+  const list = document.getElementById('msj-modal-msgs');
+  const div=document.createElement('div'); div.className='msj-msg-row';
+  div.innerHTML=`<textarea rows="3" placeholder="Texto del mensaje..."></textarea><button class="msj-remove-btn" onclick="this.parentElement.remove()">×</button>`;
+  list.appendChild(div);
+}
+function msjCloseModal() { document.getElementById('msj-modal-overlay').classList.add('hidden'); msjEditingId=null; }
+function msjCloseModalOutside(e) { if(e.target===document.getElementById('msj-modal-overlay')) msjCloseModal(); }
+function msjSaveModal() {
+  const name = document.getElementById('msj-modal-name').value.trim();
+  const emoji = document.getElementById('msj-modal-emoji').value.trim()||'💬';
+  if(!name){ alert('Poné un nombre a la situacion'); return; }
+  const rows = document.querySelectorAll('#msj-modal-msgs .msj-msg-row textarea');
+  const msgs = Array.from(rows).map((ta,i)=>({label:'Opcion '+(i+1), text:ta.value.trim()})).filter(m=>m.text);
+  if (msjEditingId) {
+    const card = msjCards.find(c=>c.id===msjEditingId);
+    if(card){ card.label=name; card.emoji=emoji; card.msgs=msgs; }
+  } else {
+    const COLORS=['#54bfda','#7c3aed','#059669','#d97706','#dc2626','#be185d','#65a30d','#0891b2'];
+    msjCards.push({id:'m'+Date.now(), x:200+Math.random()*200, y:200+Math.random()*100, label:name, emoji, color:COLORS[msjCards.length%COLORS.length], msgs});
+  }
+  msjSave(); msjCloseModal();
+  if(msjSelectedId) { const c=msjCards.find(x=>x.id===msjSelectedId); if(c) msjShowPanel(c); }
+  msjRender();
+}
+function msjDeleteCard() {
+  if(!msjEditingId||!confirm('¿Eliminar esta situacion y sus conexiones?')) return;
+  msjCards=msjCards.filter(c=>c.id!==msjEditingId);
+  msjEdges=msjEdges.filter(e=>e.from!==msjEditingId&&e.to!==msjEditingId);
+  if(msjSelectedId===msjEditingId){ msjSelectedId=null; msjClosePanel(); }
+  msjSave(); msjCloseModal(); msjRender();
+}
+function msjAddCard() { msjOpenModal(null); }
+function msjAutoLayout() {
+  const cols=3, spacX=220, spacY=180, offX=60, offY=60;
+  msjCards.forEach((c,i)=>{ c.x=offX+(i%cols)*spacX; c.y=offY+Math.floor(i/cols)*spacY; });
+  msjSave(); msjRender();
+}
+function msjResetView() { msjPan={x:40,y:40}; msjScale=1; msjRender(); }
+
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+loadState();
+renderFlowPicker();
+renderIASelects();
+renderPlantillas();
+renderAranaFlowSelect();
+window.addEventListener('resize',()=>{ if(STATE.aranaFlowId) renderAranaEdges(); });
+</script>
+
+</body>
+</html>
