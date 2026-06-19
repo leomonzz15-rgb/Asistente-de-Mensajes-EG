@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EASY GESTION - Asistente de Mensajes</title>
+<style>
+  :root {
+    --green: #54bfda;
+    --green-light: #e8f7fb;
+    --green-mid: #3dafc9;
+    --green-dark: #2a8fa8;
+    --accent: #25d366;
+    --blue: #2563eb;
+    --blue-light: #eef2ff;
+    --amber: #b45309;
+    --amber-light: #fef3e2;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* LAYOUT */
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--green-dark);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-logo span {
+    display: block;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    margin-top: 4px;
+    letter-spacing: .3px;
+  }
+  .sidebar-nav { padding: 12px 8px; flex: 1; }
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: rgba(255,255,255,0.4);
+    padding: 8px 8px 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+    transition: background .15s, color .15s;
+    user-select: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 500; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* MAIN AREA */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  .topbar-sub { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+  .topbar-badge {
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* PAGES */
+  .page { display: none; height: 100%; }
+  .page.active { display: block; }
+
+  /* MENSAJES PAGE (rubro x momento) */
+  .msgs-container { max-width: 760px; margin: 0 auto; }
+  .tabs-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tab-pill {
+    font-size: 13px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--gray-700);
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .12s;
+    font-family: inherit;
+  }
+  .tab-pill:hover { border-color: var(--green); color: var(--green-dark); }
+  .tab-pill.active { background: var(--green); border-color: var(--green); color: #fff; }
+  .tab-pill.sub { font-size: 12px; padding: 6px 12px; }
+  .tab-pill.sub.active { background: var(--green-dark); border-color: var(--green-dark); }
+  .momento-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 16px; line-height: 1.5; }
+  .rubro-tabs-wrap { margin-bottom: 18px; padding-top: 10px; border-top: 1px dashed var(--gray-200); }
+  .rubro-tabs-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-400); margin-bottom: 8px; }
+  .msg-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+
+  /* VARIANT (tarjeta de mensaje) */
+  .variant {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    transition: border-color .15s;
+  }
+  .variant:hover { border-color: var(--green-mid); }
+  .variant-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .variant-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .variant-actions { display: flex; gap: 4px; }
+  .variant-mini-btn {
+    width: 24px; height: 24px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    background: var(--white);
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--gray-400);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .variant-mini-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .variant-text {
+    font-size: 14px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .variant-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+  .copy-btn {
+    font-size: 12px;
+    padding: 5px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all .12s;
+    font-family: inherit;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: #1a7a4a; background: var(--green-light); }
+  .copy-btn.ok { border-color: var(--accent); color: #1a7a4a; background: var(--green-light); }
+
+  .add-msg-btn {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px dashed var(--gray-200);
+    border-radius: var(--radius);
+    background: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 4px;
+    font-family: inherit;
+  }
+  .add-msg-btn:hover { border-color: var(--green); color: var(--green-dark); }
+
+  .hidden { display: none !important; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* IA PAGE */
+  .ia-container { max-width: 720px; margin: 0 auto; }
+  .ia-intro {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .ia-intro-icon { font-size: 28px; flex-shrink: 0; }
+  .ia-intro-title { font-size: 15px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
+  .ia-intro-sub { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
+  .ia-form {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .ia-form label { font-size: 13px; font-weight: 600; color: var(--gray-700); display: block; margin-bottom: 8px; }
+  .ia-form select, .ia-form textarea {
+    width: 100%;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--gray-700);
+    background: var(--gray-50);
+    outline: none;
+    transition: border-color .12s;
+    font-family: inherit;
+  }
+  .ia-form select:focus, .ia-form textarea:focus { border-color: var(--green); background: var(--white); }
+  .ia-form textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+  .ia-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .ia-form .field { margin-bottom: 16px; }
+  .ia-submit {
+    width: 100%;
+    padding: 12px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .15s;
+  }
+  .ia-submit:hover { background: var(--green-mid); }
+  .ia-submit:disabled { background: var(--gray-300); cursor: not-allowed; }
+  .ia-result {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+  }
+  .ia-result-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ia-result-msgs { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .ia-msg-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .ia-msg-card-label { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .ia-msg-card-text { font-size: 14px; color: var(--gray-700); line-height: 1.7; }
+  .ia-msg-card-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+  /* PLANTILLAS PAGE */
+  .tmpl-container { max-width: 800px; margin: 0 auto; }
+  .tmpl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tmpl-search {
+    flex: 1;
+    min-width: 200px;
+    padding: 9px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 14px;
+    background: var(--white);
+    outline: none;
+    color: var(--gray-700);
+  }
+  .tmpl-search:focus { border-color: var(--green); }
+  .tmpl-filter {
+    padding: 9px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--white);
+    color: var(--gray-700);
+    outline: none;
+    cursor: pointer;
+  }
+  .add-tmpl-btn {
+    padding: 9px 16px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .add-tmpl-btn:hover { background: var(--green-mid); }
+  .tmpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .tmpl-grid { grid-template-columns: 1fr; } }
+  .tmpl-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tmpl-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .tmpl-card-meta { flex: 1; }
+  .tmpl-card-cat {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--green);
+    background: var(--green-light);
+    padding: 2px 8px;
+    border-radius: 99px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+  .tmpl-card-title { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+  .tmpl-card-text { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+  .tmpl-card-actions { display: flex; gap: 6px; }
+  .tmpl-icon-btn {
+    width: 30px; height: 30px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    background: var(--white);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: var(--gray-400);
+    transition: all .12s;
+    flex-shrink: 0;
+  }
+  .tmpl-icon-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--gray-900); }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { font-size: 12px; font-weight: 600; color: var(--gray-500); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+  .modal-field input, .modal-field select, .modal-field textarea {
+    width: 100%;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 14px;
+    color: var(--gray-700);
+    outline: none;
+    font-family: inherit;
+    background: var(--gray-50);
+    transition: border-color .12s;
+  }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--green); background: var(--white); }
+  .modal-field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .modal-hint { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+  .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+  .modal-actions-right { display: flex; gap: 10px; }
+  .btn-cancel {
+    padding: 9px 18px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    background: var(--white);
+    color: var(--gray-500);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-danger {
+    padding: 9px 18px;
+    border: 1px solid var(--red-light);
+    border-radius: var(--radius);
+    background: var(--red-light);
+    color: var(--red);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-danger:hover { background: #fde2e2; }
+  .btn-save {
+    padding: 9px 20px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-save:hover { background: var(--green-mid); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-400);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px;">EASY GESTION</div>
+      <span>Asistente de Mensajes</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Principal</div>
+      <button class="nav-item active" onclick="showPage('mensajes', this)">
+        <span class="icon">💬</span> Mensajes
+      </button>
+      <button class="nav-item" onclick="showPage('ia', this)">
+        <span class="icon">🤖</span> Sugerencia con IA
+      </button>
+      <button class="nav-item" onclick="showPage('plantillas', this)">
+        <span class="icon">📋</span> Mis plantillas
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Mensajes</div>
+        <div class="topbar-sub" id="topbar-sub">Elegi el momento de la conversacion y el rubro para copiar el mensaje justo</div>
+      </div>
+      <span class="topbar-badge" id="sync-badge">🔄 Conectando...</span>
+    </div>
+
+    <div class="content" id="content-wrap">
+
+      <!-- PAGE: MENSAJES (rubro x momento) -->
+      <div class="page active" id="page-mensajes">
+        <div class="msgs-container">
+          <div class="tabs-row" id="mom-tabs"></div>
+          <div class="momento-desc" id="momento-desc"></div>
+          <div class="rubro-tabs-wrap hidden" id="rubro-tabs-wrap">
+            <div class="rubro-tabs-label">Rubro del negocio</div>
+            <div class="tabs-row" id="rubro-tabs"></div>
+          </div>
+          <div class="msg-list" id="msg-list"></div>
+          <button class="add-msg-btn" onclick="openLibModal()">+ Agregar mensaje</button>
+        </div>
+      </div>
+
+      <!-- PAGE: IA -->
+      <div class="page" id="page-ia">
+        <div class="ia-container">
+          <div class="ia-intro">
+            <div class="ia-intro-icon">🤖</div>
+            <div>
+              <div class="ia-intro-title">Sugerencia inteligente con IA</div>
+              <div class="ia-intro-sub">Pega el historial de la conversacion con tu lead y la IA te sugiere el mejor mensaje para enviar ahora, personalizado para su rubro y situacion.</div>
+            </div>
+          </div>
+          <div class="ia-form">
+            <div class="row">
+              <div class="field">
+                <label>Rubro del lead</label>
+                <select id="ia-rubro"></select>
+              </div>
+              <div class="field">
+                <label>Situacion actual</label>
+                <select id="ia-situacion">
+                  <option value="primer_contacto">Primer contacto - nunca contesto</option>
+                  <option value="colgo">Se colgo / quedo en silencio</option>
+                  <option value="hablando">Estamos hablando</option>
+                  <option value="proponer_demo">Quiero proponer una demo</option>
+                  <option value="no_interesa">Dijo que no le interesa</option>
+                  <option value="tiene_sistema">Ya tiene un sistema</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Historial de la conversacion (opcional pero recomendado)</label>
+              <textarea id="ia-conv" placeholder="Pega aqui el chat de WhatsApp. Por ejemplo:
+
+Vos: Hola! Te escribimos de EASY GESTION...
+Lead: Hola, si me interesa
+Vos: A que rubro te dedicas?
+Lead: Tengo una ferreteria
+..."></textarea>
+            </div>
+            <button class="ia-submit" onclick="runIA()" id="ia-btn">
+              <span id="ia-btn-text">✨ Generar sugerencia</span>
+              <span class="spinner hidden" id="ia-spinner"></span>
+            </button>
+          </div>
+          <div class="ia-result hidden" id="ia-result">
+            <div class="ia-result-header">✅ Sugerencia de la IA</div>
+            <div id="ia-result-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: PLANTILLAS -->
+      <div class="page" id="page-plantillas">
+        <div class="tmpl-container">
+          <div class="tmpl-toolbar">
+            <input class="tmpl-search" type="text" placeholder="Buscar plantilla..." oninput="filterPlantillas(this.value)" id="tmpl-search">
+            <select class="tmpl-filter" onchange="filterPlantillas(document.getElementById('tmpl-search').value)" id="tmpl-cat-filter">
+              <option value="">Todas las categorias</option>
+              <option>Contacto inicial</option>
+              <option>Seguimiento</option>
+              <option>Por rubro</option>
+              <option>Demo / Reunion</option>
+              <option>Cierre</option>
+              <option>Custom</option>
+            </select>
+            <button class="add-tmpl-btn" onclick="openModal()">+ Nueva plantilla</button>
+          </div>
+          <div class="tmpl-grid" id="tmpl-grid"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: mensaje de la libreria (rubro x momento) -->
+<div class="modal-overlay hidden" id="lib-modal-overlay" onclick="closeLibModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="lib-modal-title">Nuevo mensaje</div>
+    <div class="modal-field">
+      <label>Etiqueta / variante</label>
+      <input type="text" id="lib-modal-label" placeholder="Ej: Chequeo simple">
+    </div>
+    <div class="modal-field">
+      <label>Texto del mensaje</label>
+      <textarea id="lib-modal-text" placeholder="Escribi el mensaje aca..." style="min-height:130px;"></textarea>
+    </div>
+    <div class="modal-actions">
+      <div>
+        <button class="btn-danger hidden" id="lib-modal-delete" onclick="deleteLibMsg()">Eliminar</button>
+      </div>
+      <div class="modal-actions-right">
+        <button class="btn-cancel" onclick="closeLibModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveLibModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: plantilla -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Nueva plantilla</div>
+    <div class="modal-field">
+      <label>Nombre de la plantilla</label>
+      <input type="text" id="modal-name" placeholder="Ej: Seguimiento ferreteria dia 3">
+    </div>
+    <div class="modal-field">
+      <label>Categoria</label>
+      <select id="modal-cat">
+        <option>Contacto inicial</option>
+        <option>Seguimiento</option>
+        <option>Por rubro</option>
+        <option>Demo / Reunion</option>
+        <option>Cierre</option>
+        <option>Custom</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Rubro (opcional)</label>
+      <input type="text" id="modal-rubro" placeholder="Ej: Ferreteria">
+    </div>
+    <div class="modal-field">
+      <label>Texto del mensaje</label>
+      <textarea id="modal-text" placeholder="Escribi el mensaje aca..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveTemplate()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAd2QOhhjN1W2oMkxvc1ioAjnHk6Up2cKI",
+  authDomain: "asistente-spider-eg.firebaseapp.com",
+  projectId: "asistente-spider-eg",
+  storageBucket: "asistente-spider-eg.firebasestorage.app",
+  messagingSenderId: "18783091531",
+  appId: "1:18783091531:web:2e77225a03677363e086ce"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COL = 'mensajes';
+
+// ═══════════════════════════════════════════════════════
+//  DATOS: 9 RUBROS Y MOMENTOS DE LA CONVERSACION
+// ═══════════════════════════════════════════════════════
+
+const RUBROS = [
+  { id: 'libreria',     label: 'Libreria, cotillon, jugueteria',      icon: '📚' },
+  { id: 'perfumeria',   label: 'Perfumeria, articulos de limpieza',   icon: '🧴' },
+  { id: 'polirubro',    label: 'Polirubro, bazar, deco',              icon: '🏠' },
+  { id: 'kiosco',       label: 'Kiosco, maxikiosco, drugstore',       icon: '🏪' },
+  { id: 'ferreteria',   label: 'Ferreteria, pintureria, corralon',    icon: '🔧' },
+  { id: 'lubricentro',  label: 'Lubricentro, casa de repuestos',      icon: '🚗' },
+  { id: 'almacen',      label: 'Almacen, despensa, autoservicio',     icon: '🛒' },
+  { id: 'indumentaria', label: 'Indumentaria, zapateria',             icon: '👕' },
+  { id: 'dietetica',    label: 'Dietetica, suplementos',              icon: '🥗' }
+];
+
+// Momentos "por rubro": necesitan elegir el rubro del negocio
+// Momentos "generales": el mensaje es el mismo sin importar el rubro
+const MOMENTOS = [
+  { id: 'inicial',      label: 'Primer contacto',         icon: '👋', porRubro: true,  desc: 'Primer mensaje que mandas cuando todavia nunca hablaste con el lead.' },
+  { id: 'seguimiento',  label: 'No contesto',             icon: '🔇', porRubro: true,  desc: 'El lead no te contesto. Elegi que estilo de mensaje mandarle: corto y puntual, un chequeo simple, o la info completa con el link al blog.' },
+  { id: 'activo',       label: 'Conversacion activa',     icon: '💬', porRubro: true,  desc: 'Ya sabes el rubro y hay conversacion en curso. Explicale el sistema o resolve sus dudas.' },
+  { id: 'demo',         label: 'Proponer demo',           icon: '📅', porRubro: true,  desc: 'Momento de coordinar la reunion o confirmar un horario.' },
+  { id: 'specs',        label: 'Verificar specs',         icon: '🛠️', porRubro: false, desc: 'Antes de la demo, confirmas los datos tecnicos del local (internet, dispositivo, usuarios).' },
+  { id: 'cierre',       label: 'Cierre de venta',         icon: '🚀', porRubro: false, desc: 'Despues de la demo, momento de cerrar la venta.' },
+  { id: 'objecion',     label: 'No le interesa',          icon: '❌', porRubro: false, desc: 'El lead dijo que no le interesa por ahora.' },
+  { id: 'competencia',  label: 'Ya tiene otro sistema',   icon: '💻', porRubro: false, desc: 'El lead ya usa otro sistema de gestion.' }
+];
+
+function M(label, text) { return { id: uid(), label, text }; }
+
+const DEFAULT_LIB = {
+  libreria: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para librerias, cotillones y jugueterias.\n\nFacturacion, control de ventas, stock de miles de articulos y caja, todo en un solo lugar.\n\nTe cuento mas? 📚'),
+      M('Con pregunta', 'Hola [nombre]! Tenes libreria, cotillon o jugueteria, verdad?\n\nTe pregunto porque tenemos un sistema que te organiza el stock de miles de articulos chicos sin que se te pierda nada en el deposito.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu libreria, cotillon o jugueteria.\n\nPudiste pensarlo? Justo se viene la temporada de utiles escolares, buen momento para organizar el stock 📚'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu libreria, cotillon o jugueteria?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, controlar ventas, stock de miles de articulos y caja sin complicarte en tu libreria, cotillon o jugueteria.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1161\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en una libreria, cotillon o jugueteria:\n\n📚 STOCK de miles de articulos organizados por categoria\n🛒 VENTA rapida con codigo de barras o busqueda\n📋 LISTAS escolares armadas en segundos\n💰 CAJA diaria automatica\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Aguanta miles de articulos diferentes? Si, sin limite.\n❓ Sirve para armar listas escolares? Si, en segundos.\n❓ Es complicado cargar todo el stock al principio? No, te ayudamos con la carga inicial.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu libreria, cotillon o jugueteria.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: aproximadamente cuantos articulos distintos manejas en tu local? Asi te preparo la demo a medida 📚')
+    ]
+  },
+  perfumeria: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para perfumerias y locales de articulos de limpieza.\n\nFacturacion, control de ventas, listas de precios y caja, todo en un solo lugar.\n\nTe cuento mas? 🧴'),
+      M('Con pregunta', 'Hola [nombre]! Tenes perfumeria o local de limpieza, verdad?\n\nTe pregunto porque tenemos un sistema que actualiza listas de precios de forma masiva en segundos, sin tener que cambiar producto por producto.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu perfumeria.\n\nPudiste pensarlo? Te cuento que actualizar precios de forma masiva ahorra muchisimo tiempo cada vez que sube algun proveedor 🧴'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu perfumeria o local de limpieza?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, controlar ventas, stock, listas de precios y caja sin complicarte en tu perfumeria o local de articulos de limpieza.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1162\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en una perfumeria o local de limpieza:\n\n🧴 LISTAS de precios actualizables de forma masiva\n🧾 STOCK organizado por marca y categoria\n💰 CAJA diaria automatica\n📊 CONTROL de ventas y rentabilidad por producto\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Se pueden actualizar todos los precios juntos? Si, con un solo movimiento.\n❓ Sirve para varios proveedores? Si, manejas stock y costos por proveedor.\n❓ Es complicado de usar? No, en 30 minutos ya lo manejas.\n\nQue mas te gustaria saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu perfumeria.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: trabajas con varias marcas y proveedores? Asi te muestro como queda organizado el stock 🧴')
+    ]
+  },
+  polirubro: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para polirubros, bazares y locales de deco.\n\nFacturacion, control de ventas, codigos de barras y stock, todo en un solo lugar.\n\nTe cuento mas? 🏠'),
+      M('Con pregunta', 'Hola [nombre]! Tenes polirubro, bazar o local de deco, verdad?\n\nTe pregunto porque tenemos un sistema que con el lector de codigo de barras te agiliza muchisimo la venta en mostrador.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu local.\n\nPudiste pensarlo? Te mando el video de 3 minutos que muestra como funciona el lector de codigo de barras 🏠'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu polirubro, bazar o local de deco?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, controlar ventas, codigos de barras, stock y caja sin complicarte en tu polirrubro, bazar o local de deco.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1163\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en un polirubro, bazar o local de deco:\n\n🏠 CODIGOS de barras para agilizar la venta\n🧾 STOCK de articulos variados en un solo sistema\n💰 CAJA diaria automatica\n📊 REPORTES de lo que mas se vende\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Sirve si tengo productos muy distintos entre si? Si, todos en el mismo stock.\n❓ Necesito comprar un lector de codigo de barras? No es obligatorio, pero agiliza mucho.\n❓ Es complicado migrar lo que ya tengo cargado? No, te ayudamos con la carga inicial.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu local.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: tenes lector de codigo de barras o lo estas pensando? No es obligatorio, pero te cuento las dos formas 🏠')
+    ]
+  },
+  kiosco: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, el sistema de gestion mas usado en kioscos, maxikioscos y drugstores.\n\nFacturacion con lector de barras, ventas rapidas, tiques, stock y caja diaria, todo desde el celular.\n\nTe mando mas info? 📱'),
+      M('Con pregunta', 'Hola [nombre]! Tenes kiosco, maxikiosco o drugstore, verdad?\n\nTe pregunto porque tenemos un sistema que con el lector de codigo de barras hace la venta en 2 segundos, sin perder tiempo en la fila.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu kiosco.\n\nEn cuantas computadoras o dispositivos necesitarias usar el sistema? Asi te preparo todo a medida 📱'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema para tu kiosco, maxikiosco o drugstore?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar con lector de barras, controlar ventas rapidas, emitir tiques, llevar el stock y la caja sin complicarte en tu kiosco, maxikiosco o drugstore.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1158\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Buenisimo! Te cuento como funciona EASY GESTION en un kiosco:\n\n✅ Lector de codigo de barras para vender en segundos\n✅ Tiques y comprobantes automaticos\n✅ Fiados digitales: quien te debe, cuanto y desde cuando\n✅ Cierre de caja diario automatico\n✅ Se maneja desde el celular, la tablet o la computadora\n\nTe cuento el precio o preferis verlo en vivo primero? 📱'),
+      M('Resolver dudas comunes', 'Claro! Te respondo lo que mas preguntan:\n\n❓ Es complicado de usar? No, en 30 minutos ya lo manejas solo.\n❓ Funciona sin internet? Si, tiene modo offline.\n❓ Que pasa si tengo un problema? Soporte directo por WhatsApp, el mismo dia.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu kiosco.\n\nSon 15-20 minutos por videollamada o en persona si estas cerca.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, una sola pregunta: tenes internet en el local? Puede ser wifi o datos del celular.\n\nCon eso es suficiente para que funcione todo. 📶')
+    ]
+  },
+  ferreteria: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Soy de EASY GESTION, un sistema para ferreterias, pintururias y corralones.\n\nFacturacion, presupuestos, control de stock con articulos dolarizados y caja, todo en uno.\n\nTe interesa conocerlo? 🔧'),
+      M('Con pregunta', 'Hola [nombre]! Tenes ferreteria, pintureria o corralon, verdad?\n\nTe pregunto porque tenemos un sistema que maneja articulos dolarizados automaticamente, asi no perdes con el tipo de cambio.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu ferreteria.\n\nPudiste pensarlo? Te mando el video de 3 minutos que muestra como funcionan los presupuestos 🔧'),
+      M('Chequeo simple', 'Hola! Seguis buscando un software de gestion para tu ferreteria, pintureria o corralon?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, hacer presupuestos, controlar ventas, stock, articulos dolarizados y caja sin complicarte en tu ferreteria, pintureria o corralon.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1159\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Perfecto! Te cuento lo que EASY GESTION hace por una ferreteria, pintureria o corralon:\n\n✅ Presupuestos rapidos que se mandan por WhatsApp\n✅ Articulos dolarizados que se actualizan automaticamente\n✅ Stock por unidad, metro, kilo o bulto\n✅ Varios vendedores desde distintos dispositivos\n\nTe interesa ver una demo en vivo? Solo 15 minutos 🔧'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Como manejan los articulos dolarizados? Se actualizan solos con la cotizacion del dia.\n❓ Sirve para productos sueltos y por bulto? Si, manejas la unidad que necesites.\n❓ Que pasa si se va internet? Tiene modo offline.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Perfecto! Te hago una demo especifica para ferreterias, con los modulos de presupuestos y articulos dolarizados.\n\nQue dia te viene bien? Puede ser video o en el local. 🔧'),
+      M('Antes de la demo', 'Antes de la demo, contame: manejas articulos en dolares? Asi te muestro directamente como funciona esa parte 🔧')
+    ]
+  },
+  lubricentro: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para lubricentros y casas de repuestos.\n\nFacturacion, presupuestos, busquedas rapidas en el mostrador, stock y caja, todo en un solo lugar.\n\nTe cuento mas? 🚗'),
+      M('Con pregunta', 'Hola [nombre]! Tenes lubricentro o casa de repuestos, verdad?\n\nTe pregunto porque tenemos un sistema que agiliza muchisimo la busqueda de repuestos en el mostrador, asi no haces esperar al cliente.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu lubricentro o casa de repuestos.\n\nPudiste pensarlo? Te cuento que la busqueda rapida en mostrador es de lo que mas usan nuestros clientes 🚗'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu lubricentro o casa de repuestos?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, hacer presupuestos, agilizar busquedas en el mostrador, controlar stock y caja sin complicarte en tu lubricentro o casa de repuestos.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1160\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en un lubricentro o casa de repuestos:\n\n🚗 BUSQUEDA rapida de repuestos por codigo o nombre\n📄 PRESUPUESTOS que se mandan por WhatsApp en segundos\n🧰 STOCK con alerta de reposicion\n💰 CAJA y movimientos del dia\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Se busca por numero de pieza? Si, tambien por nombre o vehiculo.\n❓ Sirve si trabajan varios empleados en el mostrador? Si, con permisos por usuario.\n❓ Los presupuestos se mandan por WhatsApp? Si, directo desde el sistema.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu lubricentro.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: aproximadamente cuantos vehiculos atendes por semana? Asi te preparo la demo a medida 🚗')
+    ]
+  },
+  almacen: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para almacenes, despensas y autoservicios.\n\nFacturacion, ventas rapidas con codigo de barras, conexion con balanza, stock y caja, todo en uno.\n\nTe cuento mas? 🛒'),
+      M('Con pregunta', 'Hola [nombre]! Tenes almacen, despensa o autoservicio, verdad?\n\nTe pregunto porque tenemos un sistema que se conecta directo con tu balanza, asi pesas y facturas en el mismo paso.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu almacen.\n\nPudiste pensarlo? Te cuento que la conexion con la balanza es de los modulos mas usados 🛒'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu almacen, despensa o autoservicio?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, controlar ventas rapidas con codigo de barras, stock, conectar con tu balanza y llevar la caja sin complicarte en tu almacen, despensa o autoservicio.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1155\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en un almacen, despensa o autoservicio:\n\n🛒 VENTA rapida con codigo de barras\n⚖️ CONEXION directa con tu balanza\n🧾 STOCK en tiempo real\n💰 CAJA diaria automatica\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Se conecta con cualquier balanza? Con las mas usadas del mercado, si.\n❓ Sirve para venta rapida en mostrador? Si, es uno de los puntos fuertes.\n❓ Es complicado cargar todo el stock al principio? No, te ayudamos con la carga inicial.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu almacen.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: que balanza usas en el local? Asi te confirmo que se conecte sin problema ⚖️')
+    ]
+  },
+  indumentaria: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para locales de indumentaria y zapateria.\n\nFacturacion, control de stock detallado por talles y colores, codigo de barras por combinacion y caja, todo en uno.\n\nTe cuento mas? 👕'),
+      M('Con pregunta', 'Hola [nombre]! Tenes local de indumentaria o zapateria, verdad?\n\nTe pregunto porque tenemos un sistema que controla el stock por talle y color por separado, asi sabes exactamente que te queda de cada combinacion.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu local de indumentaria.\n\nPudiste pensarlo? Te mando el video de 3 minutos que muestra como queda el stock por talle y color 👕'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu local de indumentaria o zapateria?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, controlar tu stock detallado por talles y colores, emitir codigos de barra por combinacion y llevar la caja sin complicarte en tu local de indumentaria o zapateria.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1156\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en un local de indumentaria o zapateria:\n\n👕 STOCK detallado por talle y color\n🏷️ CODIGO de barras por cada combinacion\n💰 CAJA diaria automatica\n📊 REPORTES de lo que mas se vende por talle\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Controla el stock por talle y color separado? Si, cada combinacion es independiente.\n❓ Se pueden imprimir etiquetas con codigo de barras? Si, por combinacion.\n❓ Es complicado cargar toda la coleccion? No, te ayudamos con la carga inicial.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu local de indumentaria.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: manejas talles y colores como variantes separadas? Asi te muestro el stock configurado igual que el tuyo 👕')
+    ]
+  },
+  dietetica: {
+    inicial: [
+      M('Directa', 'Hola [nombre]! Te escribimos de EASY GESTION, un sistema para dieteticas y locales de suplementos.\n\nFacturacion, ventas por peso, stock de miles de articulos y caja, todo en un solo lugar.\n\nTe cuento mas? 🥗'),
+      M('Con pregunta', 'Hola [nombre]! Tenes dietetica o local de suplementos, verdad?\n\nTe pregunto porque tenemos un sistema que calcula la venta por peso automaticamente, sin que tengas que sacar la cuenta a mano.\n\nTe cuento en 2 minutos?')
+    ],
+    seguimiento: [
+      M('Recordatorio corto', 'Hola [nombre]! Te escribi el otro dia sobre EASY GESTION para tu dietetica.\n\nPudiste pensarlo? Te cuento que el calculo automatico de venta por peso ahorra muchisimo tiempo en mostrador 🥗'),
+      M('Chequeo simple', 'Hola! Seguis buscando un sistema de gestion para tu dietetica o local de suplementos?'),
+      M('Info completa', 'Hola 👋 Como estas?\nTe escribimos para retomar el contacto por Easy Gestion 😊\nEs un sistema pensado para que puedas facturar, controlar ventas por peso, llevar el stock de miles de articulos y controlar la caja sin complicarte en tu dietetica o local de suplementos.\n✳️ Te invitamos a leer la siguiente nota de nuestro blog: https://easygestion.com.ar/detalle-blog.aspx?idblog=1157\n📲 Si ves que es lo que estas buscando, podemos coordinar una demostracion en vivo con un asesor o bien avanzar con la compra.\n😄 Esperamos tu mensaje!')
+    ],
+    activo: [
+      M('Explicar el sistema', 'Te cuento lo que EASY GESTION hace en una dietetica o local de suplementos:\n\n🥗 VENTA por peso calculada automaticamente\n🧾 STOCK de miles de articulos\n💰 CAJA diaria automatica\n📊 CONTROL de vencimientos y reposicion\n\nTe lo muestro en vivo?'),
+      M('Resolver dudas comunes', 'Te respondo lo que mas preguntan:\n\n❓ Calcula solo el precio por peso? Si, automatico.\n❓ Aguanta miles de articulos? Si, sin limite.\n❓ Es complicado de usar en el mostrador? No, en 30 minutos ya lo manejas.\n\nQue mas necesitas saber?')
+    ],
+    demo: [
+      M('Coordinar reunion', 'Buenisimo! Coordino la demo para mostrarte como quedaria EASY GESTION en tu dietetica.\n\nSon 15-20 minutos por videollamada o en persona.\n\nQue dias tenes disponibles esta semana? 📅'),
+      M('Antes de la demo', 'Antes de la demo, contame: vendes mucho a peso o mas que nada productos cerrados? Asi te preparo la demo a medida 🥗')
+    ]
+  }
+};
+
+const DEFAULT_GENERAL = {
+  specs: [
+    M('Verificacion completa', 'Antes de arrancar, te hago 3 preguntas rapidas para dejarlo todo listo:\n\n1️⃣ Tenes internet en el local? (wifi o datos)\n2️⃣ Que dispositivo vas a usar principalmente? (celular, tablet, PC)\n3️⃣ Cuantos empleados van a usar el sistema?\n\nCon eso ya puedo preparar la instalacion para que sea express 🛠️'),
+    M('Solo internet', 'Una pregunta rapida: tenes wifi o buena señal de datos en el local?\n\nCon eso es mas que suficiente para que funcione todo, incluso en hora pico 📶')
+  ],
+  cierre: [
+    M('Cierre directo post-demo', 'Buenisimo! Y? Te convencio?\n\nSi arrancamos hoy mismo, te damos:\n✅ Instalacion incluida\n✅ 7 dias de prueba gratis\n✅ Soporte por WhatsApp el primer mes\n\nArrancamos? 🚀'),
+    M('Cierre con precio y urgencia', 'El sistema tiene un costo de $[PRECIO] por mes, con todo incluido.\n\nEsta semana tenemos una promo: primer mes a mitad de precio si arrancas antes del viernes.\n\nTe lo pongo? 💳'),
+    M('Seguimiento post-demo sin respuesta', 'Hola [nombre]! Como te quedo la demo?\n\nMe quedo con alguna pregunta o algo que no quedo claro? Estoy aca para lo que necesites 😊')
+  ],
+  objecion: [
+    M('Entender el motivo', 'Hola [nombre], entiendo perfectamente. Solo una pregunta rapida: por que no seria util para vos en este momento? A veces hay algo puntual que podemos resolver.\n\nSin compromiso, te lo pregunto para entenderte mejor 🙏'),
+    M('Dejar la puerta abierta', 'Hola [nombre], tranquilo/a! Lo anoto para mas adelante. Si en algun momento cambia la situacion o tenes alguna pregunta, aca estamos.\n\nQue tengas un buen dia! 😊')
+  ],
+  competencia: [
+    M('Mostrar diferencias', 'Ah que bueno! Y como lo estan usando? La mayoria de los negocios que arrancaron con otro sistema terminaron pasandose a EASY GESTION por la facilidad y el soporte personalizado.\n\nTe cuento la diferencia en 3 minutos? 🚀'),
+    M('Seguimiento a futuro', 'Entiendo! Si en algun momento quieren comparar o cambiar, no duden en escribirme.\n\nUn dato: el 80% de nuestros clientes vinieron de otro sistema. Por algo sera 😄')
+  ]
+};
+
+// ═══════════════════════════════════════════════════════
+//  ESTADO Y PERSISTENCIA
+// ═══════════════════════════════════════════════════════
+let STATE = {
+  lib: null, general: null, templates: null,
+  curMomento: 'inicial', curRubro: 'kiosco',
+  libModalCtx: null, modalEditId: null
+};
+let SYNC = { lib: false, general: false, templates: false };
+
+function updateSyncBadge() {
+  const badge = document.getElementById('sync-badge');
+  if (!badge) return;
+  const allSynced = SYNC.lib && SYNC.general && SYNC.templates;
+  badge.textContent = allSynced ? '☁️ Sincronizado' : '🔄 Conectando...';
+  badge.style.color = allSynced ? '' : '';
+}
+
+function loadState() {
+  db.collection(COL).doc('lib').onSnapshot(doc => {
+    if (doc.exists) { STATE.lib = doc.data(); }
+    else { STATE.lib = JSON.parse(JSON.stringify(DEFAULT_LIB)); db.collection(COL).doc('lib').set(STATE.lib).catch(e=>console.error(e)); }
+    SYNC.lib = true; updateSyncBadge();
+    renderMensajes();
+  }, err => { console.error('Error lib:', err); STATE.lib = JSON.parse(JSON.stringify(DEFAULT_LIB)); SYNC.lib = true; updateSyncBadge(); renderMensajes(); });
+
+  db.collection(COL).doc('general').onSnapshot(doc => {
+    if (doc.exists) { STATE.general = doc.data(); }
+    else { STATE.general = JSON.parse(JSON.stringify(DEFAULT_GENERAL)); db.collection(COL).doc('general').set(STATE.general).catch(e=>console.error(e)); }
+    SYNC.general = true; updateSyncBadge();
+    renderMensajes();
+  }, err => { console.error('Error general:', err); STATE.general = JSON.parse(JSON.stringify(DEFAULT_GENERAL)); SYNC.general = true; updateSyncBadge(); renderMensajes(); });
+
+  db.collection(COL).doc('templates').onSnapshot(doc => {
+    if (doc.exists) { STATE.templates = doc.data().items || []; }
+    else { STATE.templates = []; db.collection(COL).doc('templates').set({items:[]}).catch(e=>console.error(e)); }
+    SYNC.templates = true; updateSyncBadge();
+    renderPlantillas();
+  }, err => { console.error('Error templates:', err); STATE.templates = []; SYNC.templates = true; updateSyncBadge(); renderPlantillas(); });
+}
+function saveLib() { db.collection(COL).doc('lib').set(STATE.lib).catch(e => alert('Error guardando (revisa tu conexion): ' + e.message)); }
+function saveGeneral() { db.collection(COL).doc('general').set(STATE.general).catch(e => alert('Error guardando (revisa tu conexion): ' + e.message)); }
+function saveTmpl() { db.collection(COL).doc('templates').set({items: STATE.templates}).catch(e => alert('Error guardando (revisa tu conexion): ' + e.message)); }
+function uid() { return Math.random().toString(36).slice(2,8); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function copyMsg(btn, encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
+    btn.textContent = '✅ Copiado!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '📋 Copiar'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVEGACION
+// ═══════════════════════════════════════════════════════
+const TOPBAR = {
+  mensajes: ['Mensajes', 'Elegi el momento de la conversacion y el rubro para copiar el mensaje justo'],
+  ia: ['Sugerencia con IA','Pega el chat y la IA te dice que mandar ahora'],
+  plantillas: ['Mis plantillas','Crea y organiza tus mensajes reutilizables']
+};
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (!pg) return;
+  pg.classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-title').textContent = TOPBAR[id][0];
+  document.getElementById('topbar-sub').textContent = TOPBAR[id][1];
+  if (id === 'ia') renderIASelects();
+  if (id === 'plantillas') renderPlantillas();
+  if (id === 'mensajes') renderMensajes();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAGINA: MENSAJES (rubro x momento)
+// ═══════════════════════════════════════════════════════
+function selectMomento(id) { STATE.curMomento = id; renderMensajes(); }
+function selectRubro(id) { STATE.curRubro = id; renderMensajes(); }
+
+function getCurrentList() {
+  const mom = MOMENTOS.find(m => m.id === STATE.curMomento);
+  if (!mom) return [];
+  if (mom.porRubro) {
+    if (!STATE.lib) return [];
+    return (STATE.lib[STATE.curRubro] && STATE.lib[STATE.curRubro][STATE.curMomento]) || [];
+  }
+  if (!STATE.general) return [];
+  return STATE.general[STATE.curMomento] || [];
+}
+
+function renderMensajes() {
+  const momTabs = document.getElementById('mom-tabs');
+  momTabs.innerHTML = MOMENTOS.map(m => `<button class="tab-pill${m.id===STATE.curMomento?' active':''}" onclick="selectMomento('${m.id}')">${m.icon} ${m.label}</button>`).join('');
+
+  const mom = MOMENTOS.find(m => m.id === STATE.curMomento);
+  document.getElementById('momento-desc').textContent = mom ? mom.desc : '';
+
+  const rubroWrap = document.getElementById('rubro-tabs-wrap');
+  if (mom && mom.porRubro) {
+    rubroWrap.classList.remove('hidden');
+    document.getElementById('rubro-tabs').innerHTML = RUBROS.map(r => `<button class="tab-pill sub${r.id===STATE.curRubro?' active':''}" onclick="selectRubro('${r.id}')">${r.icon} ${r.label}</button>`).join('');
+  } else {
+    rubroWrap.classList.add('hidden');
+  }
+
+  const msgList = document.getElementById('msg-list');
+  if (STATE.lib === null || STATE.general === null) {
+    msgList.innerHTML = '<div class="empty-state"><div class="icon">🔄</div><p>Conectando con la base de datos...</p></div>';
+    return;
+  }
+  const list = getCurrentList();
+  if (!list.length) {
+    msgList.innerHTML = '<div class="empty-state"><div class="icon">💬</div><p>No hay mensajes todavia para esta combinacion. Agrega el primero con el boton de abajo.</p></div>';
+    return;
+  }
+  msgList.innerHTML = list.map((m,i) => `
+    <div class="variant">
+      <div class="variant-label-row">
+        <span class="variant-label">${m.label||'Mensaje '+(i+1)}</span>
+        <div class="variant-actions"><button class="variant-mini-btn" onclick="openLibModal(${i})">✏️</button></div>
+      </div>
+      <div class="variant-text">${escHtml(m.text)}</div>
+      <div class="variant-footer"><button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(m.text)}')">📋 Copiar</button></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL: AGREGAR / EDITAR / ELIMINAR MENSAJE
+// ═══════════════════════════════════════════════════════
+function openLibModal(idx) {
+  if (STATE.lib === null || STATE.general === null) { alert('Todavia estamos conectando con la base de datos. Espera un segundo y volve a intentar.'); return; }
+  const mom = MOMENTOS.find(m => m.id === STATE.curMomento);
+  STATE.libModalCtx = {
+    momentoId: STATE.curMomento,
+    rubroId: mom.porRubro ? STATE.curRubro : null,
+    porRubro: mom.porRubro,
+    idx: (idx !== undefined && idx !== null) ? idx : null
+  };
+  const list = getCurrentList();
+  const m = STATE.libModalCtx.idx !== null ? list[STATE.libModalCtx.idx] : null;
+  document.getElementById('lib-modal-title').textContent = m ? 'Editar mensaje' : 'Nuevo mensaje';
+  document.getElementById('lib-modal-label').value = m ? (m.label||'') : '';
+  document.getElementById('lib-modal-text').value = m ? m.text : '';
+  document.getElementById('lib-modal-delete').classList.toggle('hidden', !m);
+  document.getElementById('lib-modal-overlay').classList.remove('hidden');
+}
+function closeLibModal() { document.getElementById('lib-modal-overlay').classList.add('hidden'); }
+function closeLibModalOutside(e) { if (e.target === e.currentTarget) closeLibModal(); }
+function saveLibModal() {
+  const ctx = STATE.libModalCtx; if (!ctx) return;
+  const label = document.getElementById('lib-modal-label').value.trim() || 'Mensaje';
+  const text = document.getElementById('lib-modal-text').value.trim();
+  if (!text) { alert('Escribi el texto del mensaje.'); return; }
+  let arr;
+  if (ctx.porRubro) {
+    if (!STATE.lib[ctx.rubroId]) STATE.lib[ctx.rubroId] = {};
+    if (!STATE.lib[ctx.rubroId][ctx.momentoId]) STATE.lib[ctx.rubroId][ctx.momentoId] = [];
+    arr = STATE.lib[ctx.rubroId][ctx.momentoId];
+  } else {
+    if (!STATE.general[ctx.momentoId]) STATE.general[ctx.momentoId] = [];
+    arr = STATE.general[ctx.momentoId];
+  }
+  if (ctx.idx !== null) arr[ctx.idx] = { ...arr[ctx.idx], label, text };
+  else arr.push({ id: uid(), label, text });
+  if (ctx.porRubro) saveLib(); else saveGeneral();
+  closeLibModal();
+  renderMensajes();
+}
+function deleteLibMsg() {
+  const ctx = STATE.libModalCtx; if (!ctx || ctx.idx === null) return;
+  if (!confirm('Eliminar este mensaje?')) return;
+  if (ctx.porRubro) STATE.lib[ctx.rubroId][ctx.momentoId].splice(ctx.idx, 1);
+  else STATE.general[ctx.momentoId].splice(ctx.idx, 1);
+  if (ctx.porRubro) saveLib(); else saveGeneral();
+  closeLibModal();
+  renderMensajes();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAGINA: PLANTILLAS
+// ═══════════════════════════════════════════════════════
+function renderPlantillas() {
+  const grid = document.getElementById('tmpl-grid'); if (!grid) return;
+  if (STATE.templates === null) { grid.innerHTML = '<div class="empty-state"><div class="icon">🔄</div><p>Conectando con la base de datos...</p></div>'; return; }
+  const q = (document.getElementById('tmpl-search')?.value||'').toLowerCase();
+  const c = document.getElementById('tmpl-cat-filter')?.value||'';
+  const list = STATE.templates.filter(t => (!q||t.name.toLowerCase().includes(q)||t.text.toLowerCase().includes(q)) && (!c||t.cat===c));
+  if (!list.length) { grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No hay plantillas todavia. Crea la primera con el boton de arriba.</p></div>'; return; }
+  grid.innerHTML = list.map((t,i) => `
+    <div class="tmpl-card">
+      <div class="tmpl-card-top">
+        <div class="tmpl-card-meta">
+          <span class="tmpl-card-cat">${t.cat||'Custom'}</span>
+          <div class="tmpl-card-title">${t.name}</div>
+          ${t.rubro?`<div style="font-size:11px;color:var(--gray-400);">${t.rubro}</div>`:''}
+        </div>
+        <div class="tmpl-card-actions">
+          <button class="tmpl-icon-btn" onclick="openModal(${i})">✏️</button>
+          <button class="tmpl-icon-btn" onclick="deleteTmpl(${i})">🗑</button>
+        </div>
+      </div>
+      <div class="tmpl-card-text">${t.text.slice(0,140)}${t.text.length>140?'…':''}</div>
+      <button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(t.text)}')">📋 Copiar</button>
+    </div>`).join('');
+}
+function filterPlantillas() { renderPlantillas(); }
+function openModal(idx) {
+  if (STATE.templates === null) { alert('Todavia estamos conectando con la base de datos. Espera un segundo y volve a intentar.'); return; }
+  STATE.modalEditId = idx!==undefined?idx:null;
+  const t = idx!==undefined?STATE.templates[idx]:null;
+  document.getElementById('modal-title').textContent = t?'Editar plantilla':'Nueva plantilla';
+  document.getElementById('modal-name').value = t?.name||'';
+  document.getElementById('modal-cat').value = t?.cat||'Custom';
+  document.getElementById('modal-rubro').value = t?.rubro||'';
+  document.getElementById('modal-text').value = t?.text||'';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function closeModalOutside(e) { if(e.target===e.currentTarget) closeModal(); }
+function saveTemplate() {
+  const name = document.getElementById('modal-name').value.trim();
+  const text = document.getElementById('modal-text').value.trim();
+  if (!name||!text) { alert('Completa el nombre y el texto.'); return; }
+  const tmpl = { name, cat: document.getElementById('modal-cat').value, rubro: document.getElementById('modal-rubro').value.trim(), text };
+  if (STATE.modalEditId!==null) STATE.templates[STATE.modalEditId]=tmpl; else STATE.templates.push(tmpl);
+  saveTmpl(); closeModal(); renderPlantillas();
+}
+function deleteTmpl(idx) {
+  if (!confirm('Eliminar esta plantilla?')) return;
+  STATE.templates.splice(idx,1); saveTmpl(); renderPlantillas();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAGINA: SUGERENCIA CON IA
+// ═══════════════════════════════════════════════════════
+const RUBROS_IA = RUBROS.map(r => r.label);
+
+function renderIASelects() {
+  const sel = document.getElementById('ia-rubro');
+  if (sel && !sel.options.length) RUBROS_IA.forEach(r => { const o=document.createElement('option'); o.textContent=r; sel.appendChild(o); });
+}
+
+async function runIA() {
+  const rubro = document.getElementById('ia-rubro').value;
+  const sit = document.getElementById('ia-situacion').value;
+  const conv = document.getElementById('ia-conv').value.trim();
+  const btn = document.getElementById('ia-btn'), sp = document.getElementById('ia-spinner'), btnText = document.getElementById('ia-btn-text');
+  const result = document.getElementById('ia-result'), body = document.getElementById('ia-result-body');
+  btn.disabled = true; sp.classList.remove('hidden'); btnText.textContent = 'Generando...';
+  result.classList.add('hidden');
+  const sits = { primer_contacto:'primer contacto, nunca hubo conversacion', colgo:'se colgo / quedo en silencio', hablando:'conversacion activa, mostro interes', proponer_demo:'quiero proponer demo o reunion', no_interesa:'dijo que no le interesa', tiene_sistema:'dijo que ya tiene otro sistema' };
+  const prompt = `Sos un experto en ventas de software de gestion para pequenos negocios en Argentina. Trabajas para EASY GESTION.\n\nRubro del lead: ${rubro}\nSituacion actual: ${sits[sit]||sit}\n${conv?`Historial:\n${conv}\n`:''}\nGenera 2 mensajes de WhatsApp diferentes. En espanol argentino, sin acentos, concretos, con emojis puntuales, adaptados al rubro.\n\nResponde SOLO en JSON sin backticks:\n{"msgs":[{"label":"Enfoque A - [descripcion]","text":"..."},{"label":"Enfoque B - [descripcion]","text":"..."}]}`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, messages:[{role:'user', content:prompt}] }) });
+    const data = await res.json();
+    const rawText = data.content?.map(c=>c.text||'').join('')||'';
+    const parsed = JSON.parse(rawText.replace(/```json|```/g,'').trim());
+    body.innerHTML = parsed.msgs.map(m => `<div class="ia-msg-card"><div class="ia-msg-card-label">${m.label}</div><div class="ia-msg-card-text">${escHtml(m.text)}</div><div class="ia-msg-card-footer"><button class="copy-btn" onclick="copyMsg(this,'${encodeURIComponent(m.text)}')">📋 Copiar</button></div></div>`).join('');
+    result.classList.remove('hidden');
+  } catch(err) {
+    body.innerHTML = `<div style="color:var(--red);font-size:13px;">Error al generar. Intenta de nuevo.<br><small>${err.message}</small></div>`;
+    result.classList.remove('hidden');
+  }
+  btn.disabled = false; sp.classList.add('hidden'); btnText.textContent = '✨ Generar sugerencia';
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+loadState();
+renderMensajes();
+renderIASelects();
+renderPlantillas();
+</script>
+
+</body>
+</html>
